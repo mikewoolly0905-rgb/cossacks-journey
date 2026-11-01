@@ -805,8 +805,12 @@ const CombatEngine = {
     const stageBadge = document.getElementById('combat-stage-badge');
     if (stageBadge) stageBadge.textContent = `STAGE ${targetTier.roman}: ${targetTier.enemyName.split(' (')[0].toUpperCase()}`;
     const eName = document.getElementById('enemy-name');
-    if (eName) eName.textContent = targetTier.enemyName.split(' (')[0];
-    const eSvg = document.getElementById('enemy-svg-box');
+    const eUse = document.getElementById('enemy-svg-use');
+    if (eUse && targetTier.enemySvgId) {
+      const targetId = `#${targetTier.enemySvgId}`;
+      eUse.setAttribute('href', targetId);
+      eUse.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', targetId);
+    }
     if (eSvg) eSvg.innerHTML = targetTier.enemySvg;
     const tCounter = document.getElementById('combat-turn-counter');
     if (tCounter) tCounter.textContent = '1';
