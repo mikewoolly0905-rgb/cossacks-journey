@@ -37,6 +37,7 @@ const AudioEngine = {
   ctx: null,
   enabled: true,
   ukVoice: null,
+  useLocalAudio: false, // Set to true once you drop your recorded .mp3/.wav files into /audio
 
   init() {
     if (!this.ctx) {
@@ -48,10 +49,24 @@ const AudioEngine = {
 
   initVoices() {
     if (!('speechSynthesis' in window)) return;
+
     const findVoice = () => {
       const voices = window.speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return;
+
+      // 1. Primary: Exact Ukrainian voice
       this.ukVoice = voices.find(v => v.lang && (v.lang.toLowerCase().startsWith('uk') || v.lang.includes('UA')));
+
+      // 2. Fallback: If device lacks Ukrainian (common on iOS / Windows),
+      // fallback to an available Slavic/Eastern voice, or system default
+      // rather than failing silently with zero audio.
+      if (!this.ukVoice) {
+        this.ukVoice = voices.find(v => v.lang && v.lang.startsWith('ru')) || 
+                       voices.find(v => v.default) || 
+                       voices[0];
+      }
     };
+
     findVoice();
     if ('onvoiceschanged' in window.speechSynthesis) {
       window.speechSynthesis.onvoiceschanged = findVoice;
@@ -139,28 +154,43 @@ const AudioEngine = {
     if (!this.enabled) return;
     this.playTone(528, 'sine', 0.08, 0.08);
 
-    const cleanKey = (audioFileKey || text).toString().trim().toLowerCase();
-    const audioPath = `audio/${encodeURIComponent(cleanKey)}.mp3`;
+    if (this.useLocalAudio) {
+      const cleanKey = (audioFileKey || text).toString().trim().toLowerCase();
+      const sound = new Audio(`audio/${encodeURIComponent(cleanKey)}.mp3`);
+      sound.playsInline = true;
 
-    const sound = new Audio(audioPath);
-    sound.play().catch(() => {
-      this.fallbackSpeechSynthesis(text);
-    });
+      sound.play().catch(() => {
+        this.fallbackSpeechSynthesis(text);
+      });
+      return;
+    }
+
+    this.fallbackSpeechSynthesis(text);
   },
 
   fallbackSpeechSynthesis(text) {
     if (!('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
+
       const cleanText = String(text).replace(/\s*\/\s*/g, ', ');
       const utter = new SpeechSynthesisUtterance(cleanText);
+
       if (this.ukVoice) {
         utter.voice = this.ukVoice;
+        utter.lang = this.ukVoice.lang || 'uk-UA';
+      } else {
+        utter.lang = 'uk-UA';
       }
-      utter.lang = 'uk-UA';
+
       utter.rate = 0.85;
+      utter.pitch = 1.0;
+      utter.volume = 1.0;
+
       window.speechSynthesis.speak(utter);
-    } catch (e) {}
+    } catch (e) {
+      console.warn("SpeechSynthesis error:", e);
+    }
   }
 };
 
@@ -1535,7 +1565,17 @@ const CodexSystem = {
 
 window.addEventListener('DOMContentLoaded', () => {
   GameState.load();
-
+// Unlock audio context on initial iPhone/browser touch
+  const unlockAudio = () => {
+    AudioEngine.init();
+    if (AudioEngine.ctx && AudioEngine.ctx.state === 'suspended') {
+      AudioEngine.ctx.resume();
+    }
+    document.removeEventListener('touchstart', unlockAudio);
+    document.removeEventListener('click', unlockAudio);
+  };
+  document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+  document.addEventListener('click', unlockAudio, { once: true });
   document.getElementById('btn-toggle-dev').addEventListener('click', () => {
     const modal = document.getElementById('modal-dev-panel');
     modal.classList.remove('hidden');
