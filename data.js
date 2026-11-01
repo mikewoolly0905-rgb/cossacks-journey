@@ -1,6 +1,6 @@
 /**
  * Cossack's Journey: Chronicles of the Carpathian Woods
- * MODULE: data.js - World 1: The Runic Thicket (Full 33-Letter Alphabet Curriculum)
+ * MODULE: data.js - World 1: The Runic Thicket (Rebalanced 5-Stage Curriculum)
  */
 
 window.WeatherData = [
@@ -12,6 +12,15 @@ window.WeatherData = [
 window.CurriculumData = {
   worldId: 1,
   worldTitle: "World 1: The Runic Thicket (Лісові Руни)",
+  balance: {
+    quickStrikeDamage: 10,
+    cleaveDamage: 30,
+    riposteCounterDamage: 12,
+    critMultiplier: 1.5,
+    critTimeThresholdMs: 2000,
+    keenEdgeBonusDmg: 4,
+    elixirHealAmount: 35
+  },
   tiers: [
     // -------------------------------------------------------------------------
     // STAGE 1: True Cognates & Opening Anchors (7 Letters)
@@ -24,8 +33,8 @@ window.CurriculumData = {
       name: "Stage 1: Familiar Anchors",
       subtitle: "Master the direct cognates and initial false friends",
       enemyName: "Woodland Imp (Лісовий Чорт)",
-      enemyMaxHp: 45,
-      enemyDamage: 12,
+      enemyMaxHp: 75,
+      enemyDamage: 10,
       enemyAttackName: "Obsidian Scratch",
       enemySvg: `
         <svg class="w-20 h-20" viewBox="0 0 100 120" fill="none">
@@ -66,8 +75,8 @@ window.CurriculumData = {
       name: "Stage 2: Deceptive Paths",
       subtitle: "Break English reading habits with trickster runes",
       enemyName: "Mist Sprite (Потерча)",
-      enemyMaxHp: 65,
-      enemyDamage: 18,
+      enemyMaxHp: 105,
+      enemyDamage: 16,
       enemyAttackName: "Spectral Vapour",
       enemySvg: `
         <svg class="w-20 h-20" viewBox="0 0 100 120" fill="none">
@@ -105,7 +114,7 @@ window.CurriculumData = {
       name: "Stage 3: Sacred Forest Sounds",
       subtitle: "Master the unique vowels and fricatives of Ukrainian",
       enemyName: "Woodland Mavka (Мавка)",
-      enemyMaxHp: 75,
+      enemyMaxHp: 135,
       enemyDamage: 20,
       enemyAttackName: "Willow Branch Lash",
       enemySvg: `
@@ -145,7 +154,7 @@ window.CurriculumData = {
       name: "Stage 4: The Whispering Marshes",
       subtitle: "Learn the softening sign and complex whistling runes",
       enemyName: "Bog Lurker (Болотник)",
-      enemyMaxHp: 85,
+      enemyMaxHp: 165,
       enemyDamage: 24,
       enemyAttackName: "Mud Tendril Grasp",
       enemySvg: `
@@ -164,7 +173,7 @@ window.CurriculumData = {
         { cyrillic: "Ц", speakText: "ц", sound: "TS (as in Cats)", mnemonic: "Chair with a little foot tail — makes 'TS' as in Tsunami!", wrong: ["CH (as in Church)", "SH (as in Ship)", "P (as in Pine)"] },
         { cyrillic: "Ю", speakText: "ю", sound: "YU (as in Universe)", mnemonic: "Pillar linked to a loop — sounds like 'YU'!", wrong: ["OO (as in Moon)", "YA (as in Yard)", "YO (as in Yolk)"] },
         { cyrillic: "Я", speakText: "я", sound: "YA (as in Yard) / 'I'", mnemonic: "Reversed R — means 'YA' and also the pronoun 'I'!", wrong: ["R (as in River)", "YE (as in Yes)", "YU (as in Youth)"] },
-        { cyrillic: "Х", speakText: "х", sound: "KH (throaty H as in Bach)", mnemonic: "Crossing sabres — raspy throat friction 'KH'!", wrong: ["K (as in King)", "X (as in Box)", "S (as in Sun)"] },
+        { cyrillic: "Х", speakText: "х", sound: "KH (throaty H as in Bach)", mnemonic: "Crossing sabres: raspy throat friction 'KH'!", wrong: ["K (as in King)", "X (as in Box)", "S (as in Sun)"] },
         { cyrillic: "Ь", speakText: "м'який знак", sound: "Soft Sign (Softens consonants)", mnemonic: "Makes no sound itself; softens the letter right before it!", wrong: ["B (as in Boat)", "V (as in Vine)", "P (as in Pine)"] }
       ],
       heavyPool: [
@@ -185,7 +194,7 @@ window.CurriculumData = {
       name: "World Boss: Master of the Woods",
       subtitle: "The ultimate trial of the 33-letter Cyrillic script",
       enemyName: "Elder Lisovyk (Старий Лісовик)",
-      enemyMaxHp: 130,
+      enemyMaxHp: 220,
       enemyDamage: 28,
       enemyAttackName: "Roots of the Carpathian Oaks",
       enemySvg: `
