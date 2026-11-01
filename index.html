@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Cossack's Journey: Chronicles of the Carpathian Woods</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: AQ Fantasy & Folklore Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=MedievalSharp&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,26 +17,101 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
+      background: radial-gradient(circle at center, #1c1511 0%, #0c0908 100%);
     }
     .font-fantasy { font-family: 'Cinzel', serif; }
     .font-folk { font-family: 'MedievalSharp', cursive, serif; }
 
+    /* AdventureQuest Stylized Framing & Gold Borders */
+    .aq-frame {
+      box-shadow: 0 0 0 3px #3b220e, 0 0 0 6px #78350f, 0 12px 35px rgba(0, 0, 0, 0.9);
+    }
+    .aq-gold-border {
+      border: 2px solid #b45309;
+      box-shadow: inset 0 0 6px rgba(245, 158, 11, 0.35), 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .aq-button {
+      background: linear-gradient(180deg, #d97706 0%, #b45309 50%, #78350f 100%);
+      box-shadow: 0 3px 0 #451a03, inset 0 1px 0 rgba(254, 243, 199, 0.6), 0 4px 8px rgba(0,0,0,0.5);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      transition: all 0.1s ease;
+    }
+    .aq-button:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #451a03, inset 0 1px 0 rgba(254, 243, 199, 0.6);
+    }
+
+    /* AdventureQuest Single-Sprite Animations */
+    @keyframes aqHeroBreathe {
+      0%, 100% {
+        transform: translateY(0px) scale(1, 1) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-3px) scale(0.99, 1.02) rotate(0.6deg);
+      }
+    }
+
+    .aq-hero-idle {
+      animation: aqHeroBreathe 2.4s ease-in-out infinite;
+      transform-origin: bottom center;
+      will-change: transform;
+    }
+
+    /* Combat Strike Lunge */
+    @keyframes heroLungeSlash {
+      0%   { transform: translateX(0) scale(1); }
+      20%  { transform: translateX(-8px) rotate(-4deg); }
+      60%  { transform: translateX(38px) scale(1.08) rotate(5deg); }
+      100% { transform: translateX(0) scale(1) rotate(0deg); }
+    }
+
+    .hero-strike-anim {
+      animation: heroLungeSlash 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform-origin: bottom center;
+    }
+
+    /* Hit Recoil & Flash */
+    @keyframes heroRecoilHurt {
+      0%   { transform: translateX(0); filter: drop-shadow(0 10px 14px rgba(0,0,0,0.85)); }
+      25%  { transform: translateX(-14px) rotate(-5deg); filter: brightness(1.7) drop-shadow(0 0 12px rgba(239,68,68,0.9)); }
+      100% { transform: translateX(0) rotate(0deg); filter: drop-shadow(0 10px 14px rgba(0,0,0,0.85)); }
+    }
+
+    .hero-hurt-anim {
+      animation: heroRecoilHurt 0.42s ease-out;
+      transform-origin: bottom center;
+    }
+
+    /* Enemy Idle Float */
+    @keyframes enemyFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .aq-enemy-idle { 
+      animation: enemyFloat 3s ease-in-out infinite; 
+      transform-origin: bottom center; 
+    }
+
+    /* Scanlines Overlay */
     .scanlines {
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%);
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
       background-size: 100% 4px;
       pointer-events: none;
     }
 
+    /* Combat Floating Numbers */
     @keyframes floatUpDamage {
       0% { transform: translateY(0px) scale(0.7); opacity: 0; }
-      20% { transform: translateY(-8px) scale(1.2); opacity: 1; }
+      20% { transform: translateY(-8px) scale(1.3); opacity: 1; }
       80% { transform: translateY(-28px) scale(1.0); opacity: 1; }
-      100% { transform: translateY(-44px) scale(0.85); opacity: 0; }
+      100% { transform: translateY(-48px) scale(0.85); opacity: 0; }
     }
     .animate-float-damage {
       animation: floatUpDamage 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
     }
 
+    /* Screen Shakes & Flashes */
     @keyframes screenShakeLight {
       0%, 100% { transform: translate(0, 0); }
       20% { transform: translate(-4px, 2px); }
@@ -54,170 +131,165 @@
     }
     .shake-heavy { animation: screenShakeHeavy 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
 
-    @keyframes flashGoldCrit {
-      0% { background-color: rgba(245, 158, 11, 0.55); }
-      100% { background-color: transparent; }
-    }
     .flash-crit { animation: flashGoldCrit 0.45s ease-out; }
+    @keyframes flashGoldCrit { 0% { background-color: rgba(245, 158, 11, 0.55); } 100% { background-color: transparent; } }
 
-    @keyframes flashBlueParry {
-      0% { background-color: rgba(56, 189, 248, 0.5); }
-      100% { background-color: transparent; }
-    }
     .flash-parry { animation: flashBlueParry 0.4s ease-out; }
+    @keyframes flashBlueParry { 0% { background-color: rgba(56, 189, 248, 0.5); } 100% { background-color: transparent; } }
 
-    @keyframes flashRedDamage {
-      0% { background-color: rgba(220, 38, 38, 0.5); }
-      100% { background-color: transparent; }
-    }
     .flash-damage { animation: flashRedDamage 0.4s ease-out; }
+    @keyframes flashRedDamage { 0% { background-color: rgba(220, 38, 38, 0.5); } 100% { background-color: transparent; } }
 
-    @keyframes flashGreenHeal {
-      0% { background-color: rgba(16, 185, 129, 0.4); }
-      100% { background-color: transparent; }
-    }
     .flash-heal { animation: flashGreenHeal 0.4s ease-out; }
+    @keyframes flashGreenHeal { 0% { background-color: rgba(16, 185, 129, 0.4); } 100% { background-color: transparent; } }
 
     @keyframes pulseGoldGlow {
       0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
-      50% { box-shadow: 0 0 22px rgba(245, 158, 11, 0.9); }
+      50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.9); }
     }
-    .glow-gold-pulse { animation: pulseGoldGlow 1.2s infinite ease-in-out; }
+    .glow-gold-pulse { animation: pulseGoldGlow 1.4s infinite ease-in-out; }
 
     ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: #1c1917; }
-    ::-webkit-scrollbar-thumb { background: #78350f; border-radius: 4px; }
+    ::-webkit-scrollbar-track { background: #1c1511; }
+    ::-webkit-scrollbar-thumb { background: #b45309; border-radius: 4px; }
   </style>
 </head>
-<body class="bg-neutral-950 text-amber-100 flex items-center justify-center min-h-screen p-0 sm:p-3 overflow-hidden select-none">
+<body class="text-amber-100 flex items-center justify-center min-h-[100dvh] p-0 sm:p-3 overflow-hidden select-none">
 
-  <!-- Mobile Viewport Shell -->
-  <div id="app-container" class="relative w-full max-w-md h-[100dvh] sm:h-[880px] bg-stone-900 border-0 sm:border-4 border-amber-900/60 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col justify-between">
+  <!-- Mobile Viewport Shell (AQ Golden Frame) -->
+  <div id="app-container" class="relative w-full max-w-md h-[100dvh] sm:h-[880px] bg-stone-900 aq-frame sm:rounded-3xl overflow-hidden flex flex-col justify-between">
 
     <!-- Top Persistent Header -->
-    <header class="z-30 bg-stone-950/95 border-b border-amber-900/50 px-3.5 py-2 flex items-center justify-between backdrop-blur-md">
+    <header class="z-30 bg-stone-950/95 border-b-2 border-amber-800/80 px-3.5 py-2 flex items-center justify-between shadow-md">
       <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg bg-amber-950 border border-amber-600/70 flex items-center justify-center text-amber-400 font-fantasy text-xs font-bold shadow">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-b from-amber-600 to-amber-900 border-2 border-amber-400 flex items-center justify-center text-amber-200 font-fantasy text-sm font-black shadow">
           ⚜
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <span class="text-amber-400 font-bold font-fantasy text-xs tracking-wider">КОЗАК</span>
-            <span id="header-level-badge" class="text-[10px] bg-amber-950 text-amber-200 border border-amber-700/60 px-1.5 py-0.2 rounded font-mono font-bold">LVL 1</span>
+            <span class="text-amber-300 font-bold font-fantasy text-xs tracking-wider">КОЗАК</span>
+            <span id="header-level-badge" class="text-[10px] bg-amber-950 text-amber-300 border border-amber-600 px-1.5 py-0.2 rounded font-mono font-bold">LVL 1</span>
           </div>
           <div class="flex items-center gap-1.5 mt-0.5">
-            <div class="w-16 h-1.5 bg-stone-800 rounded-full overflow-hidden border border-stone-700">
-              <div id="header-xp-bar" class="bg-amber-500 h-full w-0 transition-all duration-300"></div>
+            <div class="w-18 h-1.5 bg-stone-950 rounded-full overflow-hidden border border-amber-900/60">
+              <div id="header-xp-bar" class="bg-gradient-to-r from-amber-500 to-yellow-300 h-full w-0 transition-all duration-300"></div>
             </div>
-            <span id="player-banner-xp" class="text-[10px] text-stone-400 font-mono">0 XP</span>
+            <span id="player-banner-xp" class="text-[10px] text-amber-400/80 font-mono">0 XP</span>
           </div>
         </div>
       </div>
 
+      <!-- Header Controls -->
       <div class="flex items-center gap-1.5">
-        <button id="btn-toggle-dev" title="Open Dev Mode Panel" class="flex items-center gap-1 bg-amber-950/80 hover:bg-amber-900 border border-amber-600/80 px-2 py-1 rounded-lg text-[10px] font-mono text-amber-300 active:scale-95 transition-all shadow">
+        <button id="btn-toggle-dev" title="Open Dev Mode Panel" class="flex items-center gap-1 bg-stone-900 hover:bg-stone-800 border border-amber-700/80 px-2 py-1 rounded-lg text-[10px] font-mono text-amber-300 active:scale-95 shadow">
           <span>🛠️</span>
           <span class="hidden xs:inline">Dev</span>
         </button>
 
-        <div id="header-pouch-pill" title="Belt Pouch Inventory" class="flex items-center gap-1 bg-stone-900 border border-amber-900/60 px-2 py-1 rounded-lg text-xs font-mono text-stone-300">
+        <div id="header-pouch-pill" title="Belt Pouch Inventory" class="flex items-center gap-1 bg-stone-950 border border-amber-700/70 px-2.5 py-1 rounded-lg text-xs font-mono text-stone-200 shadow-inner">
           <span>🎒</span>
           <span id="pouch-count-label" class="text-amber-400 font-bold">1/3</span>
         </div>
 
-        <button id="btn-toggle-sound" title="Toggle Sound & Voice" class="text-amber-400 hover:text-amber-200 p-1.5 rounded-lg bg-stone-900 border border-stone-800 active:scale-95">
+        <button id="btn-toggle-sound" title="Toggle Sound & Voice" class="text-amber-400 hover:text-amber-200 p-1.5 rounded-lg bg-stone-900 border border-amber-900/80 active:scale-95">
           <svg id="icon-sound-on" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
           <svg id="icon-sound-off" class="w-4 h-4 hidden text-stone-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
         </button>
 
-        <button id="btn-reset-data" title="Reset Progress" class="text-stone-400 hover:text-rose-400 p-1.5 rounded-lg bg-stone-900 border border-stone-800 active:scale-95">
+        <button id="btn-reset-data" title="Reset Progress" class="text-stone-400 hover:text-rose-400 p-1.5 rounded-lg bg-stone-900 border border-amber-900/80 active:scale-95">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
       </div>
     </header>
 
+    <!-- Visual Screen Flash -->
     <div id="screen-flash" class="absolute inset-0 pointer-events-none z-30"></div>
 
     <!-- Main Viewport Stack -->
     <main class="relative flex-1 overflow-hidden bg-neutral-900">
 
       <!-- ============================================================ -->
-      <!-- VIEW 1: THE CARPATHIAN CLEARING                              -->
+      <!-- VIEW 1: THE CARPATHIAN CLEARING (TOWN / PREP HUB)            -->
       <!-- ============================================================ -->
-      <section id="view-camp" class="absolute inset-0 flex flex-col justify-between p-3.5 bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 overflow-y-auto">
+      <section id="view-camp" class="absolute inset-0 flex flex-col justify-between p-3.5 bg-gradient-to-b from-[#1c120c] via-[#140e0b] to-[#0d0907] overflow-y-auto">
         <div>
-          <div class="text-center mt-1 mb-2.5">
-            <span class="text-[10px] uppercase tracking-widest text-amber-500 font-mono">Карпатська Поляна • The Forest Clearing</span>
-            <h1 class="text-xl sm:text-2xl font-fantasy text-amber-100 font-extrabold tracking-wide">Campfire Rituals</h1>
-            <p class="text-xs text-stone-400 font-folk italic mt-0.5">
-              Hone your sabre, brew your concoctions, and listen to the woods before venturing forth.
+          <!-- Outpost Banner -->
+          <div class="text-center mt-1 mb-3">
+            <span class="text-[10px] uppercase tracking-widest text-amber-500 font-mono font-bold">Карпатська Поляна • Carpathian Camp</span>
+            <h1 class="text-xl sm:text-2xl font-fantasy text-amber-100 font-extrabold tracking-wide drop-shadow">Wilderness Outpost</h1>
+            <p class="text-xs text-amber-200/60 font-folk italic mt-0.5">
+              Hone Cossack steel, brew tonic draughts, and prepare your expedition.
             </p>
           </div>
 
-          <div class="grid grid-cols-4 gap-1.5 mb-3">
-            <button id="btn-open-whetstone" class="group bg-gradient-to-br from-amber-950/70 to-stone-900 border border-amber-700/60 hover:border-amber-400 p-2 rounded-2xl flex flex-col items-center text-center shadow-md active:scale-95 transition-all">
-              <div class="w-8 h-8 rounded-xl bg-amber-900/60 border border-amber-600/50 flex items-center justify-center text-base mb-1 group-hover:scale-110 transition-transform">⚔️</div>
+          <!-- 4 Outpost Ritual Buildings (AdventureQuest Town Style) -->
+          <div class="grid grid-cols-4 gap-2 mb-3">
+            <button id="btn-open-whetstone" class="group bg-gradient-to-b from-stone-800 to-stone-950 aq-gold-border p-2 rounded-xl flex flex-col items-center text-center shadow active:scale-95 transition-all">
+              <div class="w-9 h-9 rounded-lg bg-amber-950/80 border border-amber-500/60 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition-transform">⚔️</div>
               <h2 class="font-fantasy font-bold text-[10px] text-amber-200">Whetstone</h2>
-              <p class="text-[8px] text-amber-400 font-mono leading-tight">Hone Blade</p>
+              <p class="text-[8px] text-amber-400/80 font-mono">Hone Blade</p>
             </button>
 
-            <button id="btn-open-cauldron" class="group bg-gradient-to-br from-emerald-950/70 to-stone-900 border border-emerald-700/60 hover:border-emerald-400 p-2 rounded-2xl flex flex-col items-center text-center shadow-md active:scale-95 transition-all">
-              <div class="w-8 h-8 rounded-xl bg-emerald-900/60 border border-emerald-600/50 flex items-center justify-center text-base mb-1 group-hover:scale-110 transition-transform">🧪</div>
+            <button id="btn-open-cauldron" class="group bg-gradient-to-b from-stone-800 to-stone-950 aq-gold-border p-2 rounded-xl flex flex-col items-center text-center shadow active:scale-95 transition-all">
+              <div class="w-9 h-9 rounded-lg bg-emerald-950/80 border border-emerald-500/60 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition-transform">🧪</div>
               <h2 class="font-fantasy font-bold text-[10px] text-emerald-200">Cauldron</h2>
-              <p class="text-[8px] text-emerald-400 font-mono leading-tight">Brew Tonics</p>
+              <p class="text-[8px] text-emerald-400/80 font-mono">Brew Tonics</p>
             </button>
 
-            <button id="btn-open-scout" class="group bg-gradient-to-br from-sky-950/70 to-stone-900 border border-sky-700/60 hover:border-sky-400 p-2 rounded-2xl flex flex-col items-center text-center shadow-md active:scale-95 transition-all">
-              <div class="w-8 h-8 rounded-xl bg-sky-900/60 border border-sky-600/50 flex items-center justify-center text-base mb-1 group-hover:scale-110 transition-transform">👁️</div>
+            <button id="btn-open-scout" class="group bg-gradient-to-b from-stone-800 to-stone-950 aq-gold-border p-2 rounded-xl flex flex-col items-center text-center shadow active:scale-95 transition-all">
+              <div class="w-9 h-9 rounded-lg bg-sky-950/80 border border-sky-500/60 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition-transform">👁️</div>
               <h2 class="font-fantasy font-bold text-[10px] text-sky-200">Scout</h2>
-              <p class="text-[8px] text-sky-400 font-mono leading-tight">Sense Runes</p>
+              <p class="text-[8px] text-sky-400/80 font-mono">Sense Trail</p>
             </button>
 
-            <button id="btn-open-codex" class="group bg-gradient-to-br from-indigo-950/70 to-stone-900 border border-indigo-700/60 hover:border-indigo-400 p-2 rounded-2xl flex flex-col items-center text-center shadow-md active:scale-95 transition-all">
-              <div class="w-8 h-8 rounded-xl bg-indigo-900/60 border border-indigo-600/50 flex items-center justify-center text-base mb-1 group-hover:scale-110 transition-transform">📜</div>
+            <button id="btn-open-codex" class="group bg-gradient-to-b from-stone-800 to-stone-950 aq-gold-border p-2 rounded-xl flex flex-col items-center text-center shadow active:scale-95 transition-all">
+              <div class="w-9 h-9 rounded-lg bg-indigo-950/80 border border-indigo-500/60 flex items-center justify-center text-lg mb-1 group-hover:scale-110 transition-transform">📜</div>
               <h2 class="font-fantasy font-bold text-[10px] text-indigo-200">Codex</h2>
-              <p class="text-[8px] text-indigo-400 font-mono leading-tight">Bestiary Lore</p>
+              <p class="text-[8px] text-indigo-400/80 font-mono">Bestiary</p>
             </button>
           </div>
 
-          <div class="bg-stone-950/80 border border-amber-900/40 rounded-2xl p-2.5 mb-3 shadow-inner">
+          <!-- Readiness Checklist Banner -->
+          <div class="bg-stone-950/90 aq-gold-border rounded-xl p-2.5 mb-3 shadow-inner">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">Pre-Battle Readiness Status</span>
-              <span id="camp-readiness-score" class="text-[10px] font-mono bg-stone-900 px-2 py-0.5 rounded text-amber-300 border border-stone-800">Unprepared</span>
+              <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">Battle Readiness</span>
+              <span id="camp-readiness-score" class="text-[10px] font-mono bg-stone-900 px-2 py-0.5 rounded text-amber-300 border border-amber-900">Unprepared</span>
             </div>
             <div class="grid grid-cols-2 gap-2 text-[10px] font-mono">
-              <div id="buff-keen-edge-badge" class="flex items-center gap-1.5 p-1.5 rounded-xl border border-stone-800 bg-stone-900/50 text-stone-500">
+              <div id="buff-keen-edge-badge" class="flex items-center gap-1.5 p-1.5 rounded-lg border border-stone-800 bg-stone-900/60 text-stone-500">
                 <span>⚔️</span>
                 <span>Blade: Dull</span>
               </div>
-              <div id="buff-foresight-badge" class="flex items-center gap-1.5 p-1.5 rounded-xl border border-stone-800 bg-stone-900/50 text-stone-500">
+              <div id="buff-foresight-badge" class="flex items-center gap-1.5 p-1.5 rounded-lg border border-stone-800 bg-stone-900/60 text-stone-500">
                 <span>👁️</span>
                 <span>Scout: Blind</span>
               </div>
             </div>
           </div>
 
+          <!-- Stage Selection Grid -->
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
               <h2 class="text-xs font-fantasy font-bold tracking-wider text-amber-400 flex items-center gap-1.5">
                 <span>🌲</span> SELECT EXPEDITION PATH
               </h2>
-              <span class="text-[10px] font-mono text-stone-400">Tap to select stage</span>
+              <span class="text-[10px] font-mono text-stone-400">Choose destination</span>
             </div>
             <div id="camp-stages-container" class="space-y-1.5"></div>
           </div>
         </div>
 
-        <div class="mt-2.5 pt-2.5 border-t border-amber-950/80 bg-stone-950/90 p-3 rounded-2xl border border-amber-900/40 shadow-inner">
+        <!-- Camp Bottom: Belt Pouch & Venture Forth -->
+        <div class="mt-2.5 pt-2 border-t-2 border-amber-900/80 bg-stone-950/90 p-3 rounded-2xl aq-gold-border shadow-inner">
           <div class="flex items-center justify-between mb-2">
             <div>
-              <p class="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">Belt Pouch (3 Slots)</p>
-              <p class="text-[10px] text-stone-400">Tap item's × to free space</p>
+              <p class="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">Belt Pouch</p>
+              <p class="text-[9px] text-stone-400">Tap × to discard</p>
             </div>
             <div id="camp-pouch-slots" class="flex items-center gap-1.5"></div>
           </div>
 
-          <button id="btn-camp-launch-battle" class="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 hover:from-amber-500 hover:to-amber-600 active:scale-95 text-stone-950 font-fantasy font-black py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 glow-gold-pulse">
+          <button id="btn-camp-launch-battle" class="w-full aq-button active:scale-95 text-stone-950 font-fantasy font-black py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 glow-gold-pulse cursor-pointer">
             <span>⚔️</span>
             <span>Рушати в дорогу • Venture Forth (Stage <span id="lbl-fight-stage">I</span>)</span>
           </button>
@@ -225,30 +297,30 @@
       </section>
 
       <!-- ============================================================ -->
-      <!-- VIEW 2: THE WHETSTONE                                        -->
+      <!-- VIEW 2: THE WHETSTONE & SABRE RITUAL                         -->
       <!-- ============================================================ -->
-      <section id="view-whetstone" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-stone-950 via-amber-950/25 to-stone-950 overflow-y-auto">
+      <section id="view-whetstone" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-[#1c120c] via-stone-950 to-[#140e0b] overflow-y-auto">
         <div>
-          <div class="flex items-center justify-between border-b border-amber-900/40 pb-2 mb-3">
-            <button id="btn-close-whetstone" class="text-stone-300 hover:text-amber-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-800 active:scale-95">
+          <div class="flex items-center justify-between border-b-2 border-amber-900/50 pb-2 mb-3">
+            <button id="btn-close-whetstone" class="text-stone-300 hover:text-amber-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-amber-900 active:scale-95">
               ← Clearing
             </button>
             <span class="font-fantasy font-bold text-xs text-amber-300 tracking-wider">WHETSTONE RITUAL • ГОСТРІННЯ</span>
             <div class="w-12"></div>
           </div>
 
-          <div class="bg-stone-950 border border-amber-800/60 rounded-2xl p-4 shadow-xl text-center mb-3">
-            <span class="text-[10px] font-mono uppercase tracking-widest text-amber-400">Hone Cossack Steel</span>
-            <h3 class="font-fantasy font-bold text-sm text-stone-200 mt-0.5">Engrave the Runic Edge</h3>
-            <p class="text-[11px] text-stone-400 font-folk italic mb-3">
+          <div class="bg-stone-950 aq-gold-border rounded-2xl p-4 shadow-xl text-center mb-3">
+            <span class="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">Hone Cossack Steel</span>
+            <h3 class="font-fantasy font-bold text-sm text-amber-100 mt-0.5">Sharpen with Runic Mastery</h3>
+            <p class="text-[11px] text-stone-300 font-folk italic mb-3">
               Match 3 runic strokes to bestow <strong>Гостре лезо (Keen Edge: +4 DMG)</strong> on your blade.
             </p>
 
-            <div class="relative py-3 px-4 bg-stone-900/80 rounded-xl border border-stone-800 mb-3 flex items-center justify-center">
+            <div class="relative py-3 px-4 bg-stone-900/80 rounded-xl border border-amber-900/60 mb-3 flex items-center justify-center">
               <svg class="w-full h-16 drop-shadow" viewBox="0 0 320 60" fill="none">
-                <path d="M 20 40 Q 140 38 280 20 Q 310 16 315 10 Q 260 32 120 44 Z" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+                <path d="M 20 40 Q 140 38 280 20 Q 310 16 315 10 Q 260 32 120 44 Z" fill="#e2e8f0" stroke="#78350f" stroke-width="2.5"/>
                 <path d="M 20 40 Q 140 38 280 20" stroke="#f59e0b" stroke-width="2.5" stroke-dasharray="4 3"/>
-                <rect x="15" y="30" width="12" height="24" rx="2" fill="#d97706" stroke="#78350f" stroke-width="2"/>
+                <rect x="15" y="30" width="12" height="24" rx="2" fill="#d97706" stroke="#451a03" stroke-width="2"/>
                 <path d="M 22 24 C 30 24 32 58 14 58" fill="none" stroke="#b45309" stroke-width="4"/>
               </svg>
               <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -256,7 +328,7 @@
               </div>
             </div>
 
-            <button id="btn-whetstone-speak" class="mx-auto flex items-center gap-1.5 bg-stone-800 hover:bg-stone-700 border border-amber-700/50 px-3 py-1.5 rounded-full text-xs font-mono text-amber-300 active:scale-95 shadow mb-3">
+            <button id="btn-whetstone-speak" class="mx-auto flex items-center gap-1.5 bg-stone-900 hover:bg-stone-800 border border-amber-600/70 px-3 py-1.5 rounded-full text-xs font-mono text-amber-300 active:scale-95 shadow mb-3">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"></path></svg>
               <span>Hear Rune Sound</span>
             </button>
@@ -273,7 +345,7 @@
           </div>
         </div>
 
-        <div class="p-3 bg-stone-950/90 rounded-2xl border border-amber-900/40 text-center">
+        <div class="p-3 bg-stone-950/90 rounded-2xl aq-gold-border text-center">
           <p class="text-[11px] font-folk text-amber-300/80 italic">"Steel remembers the tongue that commands it."</p>
         </div>
       </section>
@@ -281,10 +353,10 @@
       <!-- ============================================================ -->
       <!-- VIEW 3: HERBAL CAULDRON                                      -->
       <!-- ============================================================ -->
-      <section id="view-cauldron" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-stone-950 via-emerald-950/25 to-stone-950 overflow-y-auto">
+      <section id="view-cauldron" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-[#0e1713] via-stone-950 to-[#0e1713] overflow-y-auto">
         <div>
-          <div class="flex items-center justify-between border-b border-emerald-900/40 pb-2 mb-3">
-            <button id="btn-close-cauldron" class="text-stone-300 hover:text-emerald-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-800 active:scale-95">
+          <div class="flex items-center justify-between border-b-2 border-emerald-900/60 pb-2 mb-3">
+            <button id="btn-close-cauldron" class="text-stone-300 hover:text-emerald-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-emerald-900 active:scale-95">
               ← Clearing
             </button>
             <span class="font-fantasy font-bold text-xs text-emerald-300 tracking-wider">HERBAL CAULDRON • ТРАВНИК</span>
@@ -292,16 +364,16 @@
           </div>
 
           <div class="mb-3">
-            <p class="text-[10px] font-mono uppercase tracking-wider text-stone-400 text-center mb-1.5">Select Concoction to Brew:</p>
+            <p class="text-[10px] font-mono uppercase tracking-wider text-stone-300 text-center mb-1.5">Select Concoction to Brew:</p>
             <div class="grid grid-cols-2 gap-2">
-              <button id="btn-select-brew-elixir" class="p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-950/70 text-left flex items-center gap-2.5 transition-all shadow">
+              <button id="btn-select-brew-elixir" class="p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-950/80 text-left flex items-center gap-2.5 transition-all shadow">
                 <span class="text-2xl">🧪</span>
                 <div>
                   <p class="font-fantasy font-bold text-xs text-emerald-200">Healing Elixir</p>
                   <p class="text-[10px] text-emerald-400 font-mono">Restores +35 HP</p>
                 </div>
               </button>
-              <button id="btn-select-brew-scroll" class="p-2.5 rounded-xl border-2 border-stone-800 bg-stone-900/70 text-left flex items-center gap-2.5 transition-all opacity-65">
+              <button id="btn-select-brew-scroll" class="p-2.5 rounded-xl border-2 border-stone-800 bg-stone-900/80 text-left flex items-center gap-2.5 transition-all opacity-65">
                 <span class="text-2xl">📜</span>
                 <div>
                   <p class="font-fantasy font-bold text-xs text-sky-200">Scroll of Clarity</p>
@@ -311,10 +383,10 @@
             </div>
           </div>
 
-          <div class="bg-stone-950 border border-emerald-900/60 rounded-2xl p-4 shadow-xl text-center">
+          <div class="bg-stone-950 aq-gold-border rounded-2xl p-4 shadow-xl text-center">
             <div class="flex items-center justify-between mb-2">
               <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">Alchemical Synthesis</span>
-              <span id="cauldron-step-badge" class="text-[10px] font-mono bg-emerald-950 border border-emerald-700 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Ingredient 1 of 3</span>
+              <span id="cauldron-step-badge" class="text-[10px] font-mono bg-emerald-950 border border-emerald-600 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Ingredient 1 of 3</span>
             </div>
 
             <div class="grid grid-cols-3 gap-1.5 mb-3">
@@ -323,26 +395,26 @@
               <div id="cauldron-pip-3" class="h-1.5 rounded-full bg-stone-800"></div>
             </div>
 
-            <div class="p-3 my-2 bg-stone-900/95 rounded-xl border border-stone-800 flex items-center justify-between">
+            <div class="p-3 my-2 bg-stone-900/95 rounded-xl border border-emerald-900/60 flex items-center justify-between">
               <span class="text-xs text-stone-400 font-mono">Ukrainian Rune:</span>
               <div class="flex items-center gap-2">
                 <span id="cauldron-prompt-word" class="font-folk text-2xl font-bold text-emerald-300">А</span>
-                <button id="btn-cauldron-speak" class="p-1.5 rounded-full bg-stone-800 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-700/40 active:scale-90">
+                <button id="btn-cauldron-speak" class="p-1.5 rounded-full bg-stone-800 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-600 active:scale-90">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"></path></svg>
                 </button>
               </div>
             </div>
 
-            <p class="text-xs text-stone-400 mb-2.5">Identify 3 runes to bottle the concoction:</p>
+            <p class="text-xs text-stone-300 mb-2.5">Identify 3 runes to bottle the concoction:</p>
             <div id="cauldron-choice-grid" class="grid grid-cols-2 gap-2"></div>
             <div id="cauldron-status-msg" class="text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-300"></div>
           </div>
         </div>
 
-        <div class="bg-stone-950/90 border border-stone-800 rounded-2xl p-3 flex items-center justify-between mt-3">
+        <div class="bg-stone-950/90 aq-gold-border rounded-2xl p-3 flex items-center justify-between mt-3">
           <div>
-            <p class="text-[10px] font-mono text-stone-400 uppercase font-bold">Belt Pouch Capacity</p>
-            <p class="text-[10px] text-stone-500">Tap × on any slot to discard item</p>
+            <p class="text-[10px] font-mono text-stone-300 uppercase font-bold">Belt Pouch Capacity</p>
+            <p class="text-[10px] text-stone-400">Tap × on any slot to discard item</p>
           </div>
           <div id="cauldron-pouch-slots" class="flex gap-1.5"></div>
         </div>
@@ -351,25 +423,25 @@
       <!-- ============================================================ -->
       <!-- VIEW 4: SCOUT'S WINDWARD LISTENING                           -->
       <!-- ============================================================ -->
-      <section id="view-scout" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-stone-950 via-sky-950/20 to-stone-950 overflow-y-auto">
+      <section id="view-scout" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-[#0c141d] via-stone-950 to-[#0c141d] overflow-y-auto">
         <div>
-          <div class="flex items-center justify-between border-b border-sky-900/40 pb-2 mb-3">
-            <button id="btn-close-scout" class="text-stone-300 hover:text-sky-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-800 active:scale-95">
+          <div class="flex items-center justify-between border-b-2 border-sky-900/60 pb-2 mb-3">
+            <button id="btn-close-scout" class="text-stone-300 hover:text-sky-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-sky-900 active:scale-95">
               ← Clearing
             </button>
             <span class="font-fantasy font-bold text-xs text-sky-300 tracking-wider">WINDWARD SCOUT • РОЗВІДКА</span>
             <div class="w-12"></div>
           </div>
 
-          <div class="bg-stone-950 border border-sky-900/60 rounded-2xl p-4 shadow-xl text-center mb-3">
+          <div class="bg-stone-950 aq-gold-border rounded-2xl p-4 shadow-xl text-center mb-3">
             <span class="text-[10px] font-mono uppercase tracking-widest text-sky-400 font-bold">Sense Forest Shadows</span>
             <h3 class="font-fantasy font-bold text-sm text-stone-100 mt-0.5">Listen to the Carpathian Wind</h3>
             <p class="text-[11px] text-stone-400 font-folk italic mb-3">
               Practice runes to unlock <strong>Передбачення (Scout's Foresight)</strong>.
             </p>
 
-            <div class="relative py-4 px-4 bg-stone-900/90 rounded-xl border border-stone-800 mb-3 flex flex-col items-center justify-center">
-              <svg class="w-full h-16 opacity-40" viewBox="0 0 200 60">
+            <div class="relative py-4 px-4 bg-stone-900/90 rounded-xl border border-sky-900/60 mb-3 flex flex-col items-center justify-center">
+              <svg class="w-full h-16 opacity-30" viewBox="0 0 200 60">
                 <polygon points="10,55 30,15 50,55" fill="#047857"/>
                 <polygon points="40,55 65,10 90,55" fill="#065f46"/>
                 <polygon points="80,55 105,18 130,55" fill="#047857"/>
@@ -379,7 +451,7 @@
               </svg>
               <div class="flex items-center gap-2 mt-1">
                 <span id="scout-prompt-verb" class="font-folk text-3xl font-bold text-sky-300">Р</span>
-                <button id="btn-scout-speak" class="p-1.5 rounded-full bg-stone-800 hover:bg-sky-900/60 text-sky-300 border border-sky-700/40 active:scale-90">
+                <button id="btn-scout-speak" class="p-1.5 rounded-full bg-stone-800 hover:bg-sky-900/60 text-sky-300 border border-sky-600 active:scale-90">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"></path></svg>
                 </button>
               </div>
@@ -397,7 +469,7 @@
           </div>
         </div>
 
-        <div class="p-3 bg-stone-950/90 rounded-2xl border border-sky-900/40 text-center">
+        <div class="p-3 bg-stone-950/90 rounded-2xl aq-gold-border text-center">
           <p class="text-[11px] font-folk text-sky-300/80 italic">"He who senses the branch crack parries the claw."</p>
         </div>
       </section>
@@ -405,18 +477,18 @@
       <!-- ============================================================ -->
       <!-- VIEW 5: CARPATHIAN FOLKLORE CODEX                            -->
       <!-- ============================================================ -->
-      <section id="view-codex" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-stone-950 via-indigo-950/20 to-stone-950 overflow-y-auto">
+      <section id="view-codex" class="absolute inset-0 hidden flex-col justify-between p-4 bg-gradient-to-b from-[#13101d] via-stone-950 to-[#13101d] overflow-y-auto">
         <div>
-          <div class="flex items-center justify-between border-b border-indigo-900/40 pb-2 mb-3">
-            <button id="btn-close-codex" class="text-stone-300 hover:text-indigo-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-stone-800 active:scale-95">
+          <div class="flex items-center justify-between border-b-2 border-indigo-900/60 pb-2 mb-3">
+            <button id="btn-close-codex" class="text-stone-300 hover:text-indigo-200 text-xs flex items-center gap-1 bg-stone-900 px-2.5 py-1.5 rounded-lg border border-indigo-900 active:scale-95">
               ← Clearing
             </button>
             <span class="font-fantasy font-bold text-xs text-indigo-300 tracking-wider">CARPATHIAN CODEX • КОДЕКС</span>
             <div class="w-12"></div>
           </div>
 
-          <div class="flex gap-1.5 mb-3 bg-stone-950/80 p-1 rounded-xl border border-indigo-950">
-            <button id="btn-codex-tab-beasts" class="flex-1 py-1.5 rounded-lg font-fantasy text-xs font-bold bg-indigo-900/60 text-indigo-200 border border-indigo-600 transition-all">
+          <div class="flex gap-1.5 mb-3 bg-stone-950/90 p-1 rounded-xl border border-indigo-950">
+            <button id="btn-codex-tab-beasts" class="flex-1 py-1.5 rounded-lg font-fantasy text-xs font-bold bg-indigo-900/70 text-indigo-200 border border-indigo-500 transition-all">
               Beasts & Spirits
             </button>
             <button id="btn-codex-tab-sacred" class="flex-1 py-1.5 rounded-lg font-fantasy text-xs font-bold text-stone-400 hover:text-indigo-200 transition-all">
@@ -427,55 +499,57 @@
           <div id="codex-entries-container" class="space-y-3 pb-4"></div>
         </div>
 
-        <div class="p-3 bg-stone-950/90 rounded-2xl border border-indigo-950 text-center">
+        <div class="p-3 bg-stone-950/90 rounded-2xl aq-gold-border text-center">
           <p class="text-[11px] font-folk text-indigo-300/80 italic">"He who knows the spirit's name commands the forest."</p>
         </div>
       </section>
 
       <!-- ============================================================ -->
-      <!-- VIEW 6: TACTICAL COMBAT ARENA                                -->
+      <!-- VIEW 6: TACTICAL COMBAT ARENA (ADVENTUREQUEST STYLE)         -->
       <!-- ============================================================ -->
       <section id="view-battle" class="absolute inset-0 hidden flex-col justify-between">
         
-        <div id="arena-top-box" class="relative h-[43%] w-full bg-stone-950 overflow-hidden flex flex-col justify-between p-3.5 border-b-2 border-amber-950/70 transition-colors">
-          <svg class="absolute inset-0 w-full h-full object-cover opacity-25 pointer-events-none" viewBox="0 0 400 300" preserveAspectRatio="none">
-            <circle cx="330" cy="45" r="22" fill="#fef3c7" opacity="0.25"/>
-            <polygon points="0,170 50,105 115,180 180,85 255,195 335,110 400,185 400,300 0,300" fill="#064e3b"/>
-            <polygon points="0,210 70,145 145,225 220,135 310,235 400,165 400,300 0,300" fill="#022c22"/>
-          </svg>
-
+        <!-- ARENA TOP: AQ STAGE, MOONLIT FOREST & PUPPET RIGS -->
+        <div id="arena-top-box" 
+             class="relative h-[44%] w-full bg-cover bg-center border-b-4 border-amber-900/90 transition-colors overflow-hidden flex flex-col justify-between p-3"
+             style="background-image: url('Assets/backgrounds/carpathian_night.webp');">
+          <!-- Dynamic Weather Mist Layer -->
           <div id="arena-weather-overlay" class="absolute inset-0 pointer-events-none transition-opacity duration-700 opacity-0 bg-sky-950/30"></div>
 
+          <!-- Top Stage HUD Badges -->
           <div class="relative z-10 flex items-center justify-between gap-1">
-            <button id="btn-flee-combat" class="text-stone-300 hover:text-amber-200 text-xs flex items-center gap-1 bg-stone-900/90 px-2 py-1 rounded-lg border border-stone-700 active:scale-95 shrink-0">
+            <button id="btn-flee-combat" class="text-stone-300 hover:text-amber-200 text-xs flex items-center gap-1 bg-stone-900/90 px-2.5 py-1 rounded-lg border border-amber-900 active:scale-95 shrink-0 shadow">
               ← Retreat
             </button>
-            <div id="combat-stage-badge" class="text-[10px] font-mono font-bold tracking-wider text-amber-400 bg-stone-900/95 px-2 py-1 rounded-full border border-amber-900/60 truncate max-w-[140px]">
+            <div id="combat-stage-badge" class="text-[10px] font-mono font-bold tracking-wider text-amber-300 bg-stone-950/90 px-2.5 py-1 rounded-full border border-amber-600/80 truncate max-w-[140px] shadow">
               STAGE I
             </div>
-            <div id="combat-weather-badge" class="flex items-center gap-1 text-[10px] font-mono text-cyan-300 bg-stone-900/95 px-2 py-1 rounded-lg border border-cyan-900/60 truncate">
+            <div id="combat-weather-badge" class="flex items-center gap-1 text-[10px] font-mono text-cyan-300 bg-stone-950/90 px-2 py-1 rounded-lg border border-cyan-800 truncate shadow">
               <span>🌙</span> <span id="lbl-weather-name">Ясна ніч</span>
             </div>
-            <div class="flex items-center gap-1 text-[10px] font-mono text-stone-300 bg-stone-900/90 px-2 py-1 rounded-lg border border-stone-800 shrink-0">
+            <div class="flex items-center gap-1 text-[10px] font-mono text-stone-300 bg-stone-950/90 px-2 py-1 rounded-lg border border-stone-800 shrink-0 shadow">
               <span>T#</span>
               <span id="combat-turn-counter" class="text-amber-400 font-bold">1</span>
             </div>
           </div>
 
-          <div id="enemy-telegraph-banner" class="relative z-20 hidden bg-gradient-to-r from-red-950 via-red-900 to-red-950 border border-red-500 text-amber-100 text-xs font-mono px-3 py-1.5 rounded-xl shadow-lg flex items-center justify-between animate-pulse">
+          <!-- Telegraph Alert Banner -->
+          <div id="enemy-telegraph-banner" class="relative z-20 hidden bg-gradient-to-r from-red-950 via-red-900 to-red-950 border-2 border-red-500 text-amber-100 text-xs font-mono px-3 py-1.5 rounded-xl shadow-lg flex items-center justify-between animate-pulse">
             <span class="flex items-center gap-1.5 font-bold truncate">
               <span>🛡️</span> <span id="telegraph-text">Chort attacks! Ready your shield!</span>
             </span>
             <span class="text-amber-300 font-bold uppercase tracking-wider text-[10px] shrink-0 ml-2">PARRY TURN</span>
           </div>
 
-          <!-- Combatants Stage -->
-          <div class="relative z-10 flex items-end justify-between px-2 pt-1 pb-0.5 flex-1">
-            <!-- PLAYER -->
+          <!-- Combatants Stage Floor -->
+          <div class="relative z-10 flex items-end justify-between px-2 pt-1 pb-1 flex-1">
+            
+            <!-- PLAYER (AQ Hero Illustrated Sprite) -->
             <div class="flex flex-col items-center relative w-36">
-              <div id="player-dmg-anchor" class="absolute -top-6 z-30 font-fantasy font-black text-lg drop-shadow pointer-events-none"></div>
+              <div id="player-dmg-anchor" class="absolute -top-7 z-30 font-fantasy font-black text-lg drop-shadow pointer-events-none"></div>
 
-              <div class="w-full bg-stone-950/90 border border-stone-700/80 rounded-xl p-1.5 mb-1.5 shadow-md">
+              <!-- Cossack HP Plate -->
+              <div class="w-full bg-stone-950/95 border-2 border-amber-700/80 rounded-xl p-1.5 mb-2 shadow-lg">
                 <div class="flex justify-between items-center text-[10px] font-mono mb-1">
                   <span class="text-amber-300 font-bold flex items-center gap-1">
                     <span>КОЗАК</span>
@@ -483,65 +557,65 @@
                     <span id="debuff-dazed-badge" class="hidden text-[8px] bg-rose-600 text-white px-1 rounded font-bold">DAZED</span>
                     <span id="active-buff-badge" class="hidden text-[8px] bg-amber-600 text-stone-950 px-1 rounded font-bold">EDGE</span>
                   </span>
-                  <span id="player-hp-text" class="text-stone-200 font-bold">100/100</span>
+                  <span id="player-hp-text" class="text-stone-200 font-bold font-mono">100/100</span>
                 </div>
-                <div class="w-full bg-stone-800 h-2 rounded-full overflow-hidden border border-stone-700">
-                  <div id="player-hp-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full w-full transition-all duration-300"></div>
+                <div class="w-full bg-stone-900 h-2.5 rounded-full overflow-hidden border border-stone-800 shadow-inner">
+                  <div id="player-hp-bar" class="bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600 h-full w-full transition-all duration-300"></div>
                 </div>
               </div>
 
-              <div id="player-sprite" class="transition-transform duration-200 relative">
-                <svg class="w-20 h-20 drop-shadow-[0_8px_10px_rgba(0,0,0,0.85)]" viewBox="0 0 100 120" fill="none">
-                  <circle cx="50" cy="36" r="22" fill="#d97706" opacity="0.25"/>
-                  <path d="M24 64 L50 45 L76 64 L82 112 L18 112 Z" fill="#991b1b" stroke="#450a0a" stroke-width="2.5"/>
-                  <path d="M44 48 L50 112 L56 48 Z" fill="#7f1d1d"/>
-                  <rect x="22" y="80" width="56" height="8" fill="#f59e0b" rx="2"/>
-                  <circle cx="50" cy="36" r="14" fill="#fed7aa"/>
-                  <path d="M50 22 C 44 12, 26 16, 30 30" stroke="#1c1917" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-                  <path d="M40 41 C 45 44, 49 43, 50 41 C 51 43, 55 44, 60 41" stroke="#1c1917" stroke-width="3" stroke-linecap="round"/>
-                  <path d="M75 76 L92 36 C 95 26, 93 20, 91 15" stroke="#e2e8f0" stroke-width="4" stroke-linecap="round"/>
-                  <circle cx="75" cy="76" r="3.5" fill="#f59e0b"/>
-                </svg>
+              <!-- Animated Raster Cossack Sprite -->
+              <div id="player-sprite" class="transition-transform duration-200 relative aq-hero-idle">
+                <div class="w-24 h-28 sm:w-28 sm:h-32 flex items-end justify-center">
+                  <img src="Assets/characters/cossack_idle.webp" 
+                       alt="Cossack Hero" 
+                       class="max-w-full max-h-full object-contain filter drop-shadow-[0_12px_14px_rgba(0,0,0,0.85)] pointer-events-none select-none" />
+                </div>
               </div>
             </div>
 
-            <div class="text-stone-600 font-fantasy text-xs font-bold opacity-60 mb-6">VS</div>
+            <div class="text-amber-500 font-fantasy text-sm font-bold opacity-60 mb-8">VS</div>
 
             <!-- ENEMY -->
             <div class="flex flex-col items-center relative w-36">
-              <div id="enemy-dmg-anchor" class="absolute -top-6 z-30 font-fantasy font-black text-lg drop-shadow pointer-events-none"></div>
+              <div id="enemy-dmg-anchor" class="absolute -top-7 z-30 font-fantasy font-black text-lg drop-shadow pointer-events-none"></div>
 
-              <div class="w-full bg-stone-950/90 border border-stone-700/80 rounded-xl p-1.5 mb-1.5 shadow-md">
+              <!-- Enemy HP Plate -->
+              <div class="w-full bg-stone-950/95 border-2 border-red-800/80 rounded-xl p-1.5 mb-2 shadow-lg">
                 <div class="flex justify-between items-center text-[10px] font-mono mb-1">
                   <span id="enemy-name" class="text-rose-400 font-bold truncate">Shadow Chort</span>
-                  <span id="enemy-hp-text" class="text-stone-200 font-bold">75/75</span>
+                  <span id="enemy-hp-text" class="text-stone-200 font-bold font-mono">75/75</span>
                 </div>
-                <div class="w-full bg-stone-800 h-2 rounded-full overflow-hidden border border-stone-700">
-                  <div id="enemy-hp-bar" class="bg-gradient-to-r from-red-600 to-amber-500 h-full w-full transition-all duration-300"></div>
+                <div class="w-full bg-stone-900 h-2.5 rounded-full overflow-hidden border border-stone-800 shadow-inner">
+                  <div id="enemy-hp-bar" class="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 h-full w-full transition-all duration-300"></div>
                 </div>
               </div>
 
-              <div id="enemy-sprite" class="transition-transform duration-200 relative">
+              <!-- Injected Dynamic Enemy SVG (With Gentle Idle Float) -->
+              <div id="enemy-sprite" class="transition-transform duration-200 relative aq-enemy-idle">
                 <div id="enemy-slash-fx" class="hidden absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
-                  <svg class="w-20 h-20 text-amber-300" viewBox="0 0 100 100" fill="none">
-                    <path d="M15 85 Q 50 45 85 15" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
-                    <path d="M25 90 Q 55 55 90 25" stroke="#fef08a" stroke-width="3" stroke-linecap="round"/>
+                  <svg class="w-24 h-24 text-yellow-300 drop-shadow" viewBox="0 0 100 100" fill="none">
+                    <path d="M15 85 Q 50 45 85 15" stroke="currentColor" stroke-width="8" stroke-linecap="round"/>
+                    <path d="M25 90 Q 55 55 90 25" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
                   </svg>
                 </div>
-                <div id="enemy-svg-box" class="w-20 h-20 flex items-center justify-center"></div>
+                <!-- Clean direct container for data.js SVG strings -->
+                <div id="enemy-svg-box" class="w-24 h-24 flex items-center justify-center drop-shadow-[0_12px_14px_rgba(0,0,0,0.85)]"></div>
               </div>
             </div>
+
           </div>
         </div>
 
-        <!-- BOTTOM TACTICAL DECK -->
-        <div class="flex-1 flex flex-col justify-between p-3.5 bg-gradient-to-b from-stone-900 to-stone-950">
+        <!-- BOTTOM TACTICAL DECK (AQ Command Card) -->
+        <div class="flex-1 flex flex-col justify-between p-3.5 bg-gradient-to-b from-[#140e0b] to-[#0a0705] border-t-2 border-amber-900/60">
 
-          <div class="flex items-center justify-between bg-stone-950/90 border border-amber-900/50 px-3 py-1.5 rounded-xl shadow">
+          <!-- Runic Momentum Bar -->
+          <div class="flex items-center justify-between bg-stone-950/95 aq-gold-border px-3 py-1 rounded-xl shadow">
             <div class="flex items-center gap-1.5">
               <span class="text-xs">⚡</span>
               <span class="font-fantasy font-bold text-[10px] text-amber-300 uppercase tracking-wider">Runic Focus:</span>
-              <span id="lbl-focus-count" class="text-[10px] font-mono text-stone-400">0/2 Charges</span>
+              <span id="lbl-focus-count" class="text-[10px] font-mono text-stone-300">0/2 Charges</span>
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -550,8 +624,9 @@
             </div>
           </div>
 
+          <!-- Stance Action Tabs -->
           <div id="combat-action-tabs" class="grid grid-cols-3 gap-2 mt-1">
-            <button id="btn-tab-quick" class="tactical-tab border-2 border-amber-500 bg-amber-950/80 text-amber-100 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow">
+            <button id="btn-tab-quick" class="tactical-tab border-2 border-amber-500 bg-gradient-to-b from-amber-900/80 to-stone-950 text-amber-100 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow cursor-pointer">
               <span>🗡 Quick Strike</span>
               <span id="tab-quick-sublabel" class="text-[9px] font-mono text-amber-300">+1 Focus • 10 DMG</span>
             </button>
@@ -559,15 +634,18 @@
               <span>⚡ Runic Cleave</span>
               <span id="tab-heavy-sublabel" class="text-[9px] font-mono text-stone-500">Locked (0/2 ⚡)</span>
             </button>
-            <button id="btn-tab-pouch" class="tactical-tab border-2 border-stone-800 bg-stone-950/70 text-stone-400 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow">
+            <button id="btn-tab-pouch" class="tactical-tab border-2 border-stone-800 bg-stone-950/70 text-stone-400 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow cursor-pointer">
               <span>🎒 Belt Pouch</span>
               <span id="combat-tab-pouch-count" class="text-[9px] font-mono text-stone-500">1/3 Items</span>
             </button>
           </div>
 
-          <div id="combat-card-container" class="relative bg-stone-950/95 border border-amber-900/60 rounded-2xl p-3 shadow-xl flex flex-col items-center justify-center text-center my-1 overflow-hidden">
-            <div id="combat-streak-wrapper" class="w-full flex items-center justify-between px-3 py-1 bg-stone-900/60 border-b border-amber-900/30 -mt-3 mb-2 -mx-3">
-              <span class="text-[9px] font-mono uppercase tracking-wider text-stone-400 flex items-center gap-1">
+          <!-- Central Ukrainian Challenge Card (AQ Parchment Plaque) -->
+          <div id="combat-card-container" class="relative bg-gradient-to-b from-[#1c1410] to-[#120c09] aq-gold-border rounded-2xl p-2.5 shadow-xl flex flex-col items-center justify-center text-center my-1 overflow-hidden">
+            
+            <!-- Mastery Streak Header -->
+            <div id="combat-streak-wrapper" class="w-full flex items-center justify-between px-3 py-1 bg-black/40 border-b border-amber-900/40 -mt-2.5 mb-1.5 -mx-2.5">
+              <span class="text-[9px] font-mono uppercase tracking-wider text-amber-200/80 flex items-center gap-1">
                 <span>🔥</span> <span>Mastery Streak:</span>
               </span>
               <div class="flex items-center gap-1.5">
@@ -575,16 +653,16 @@
                 <div id="streak-pip-2" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
                 <div id="streak-pip-3" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
                 <div id="streak-pip-4" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
-                <span id="lbl-streak-bonus" class="text-[9px] font-mono text-stone-500 ml-1 font-bold">0/4</span>
+                <span id="lbl-streak-bonus" class="text-[9px] font-mono text-stone-400 ml-1 font-bold">0/4</span>
               </div>
             </div>
 
             <div class="w-full flex items-center justify-between mb-0.5">
-              <span id="combat-lock-indicator" class="text-[9px] font-mono text-stone-400 bg-stone-900/90 border border-stone-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span id="combat-lock-indicator" class="text-[9px] font-mono text-stone-300 bg-stone-900/90 border border-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span>🔒</span> <span id="combat-lock-label">Turn #1</span>
               </span>
 
-              <button id="btn-combat-pronounce" title="Hear Ukrainian pronunciation" class="bg-stone-800/90 hover:bg-amber-900/60 text-amber-300 px-2 py-0.5 rounded-full border border-amber-700/40 active:scale-90 transition-all flex items-center gap-1 text-[10px] font-mono">
+              <button id="btn-combat-pronounce" title="Hear Ukrainian pronunciation" class="bg-stone-900 hover:bg-amber-900/70 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-600/80 active:scale-90 transition-all flex items-center gap-1 text-[10px] font-mono shadow">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07"></path></svg>
                 <span>Speak</span>
               </button>
@@ -595,21 +673,22 @@
               <span id="crit-status-pill" class="text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded">Streak: 0/4</span>
             </div>
 
-            <div id="combat-cyrillic-prompt" class="font-folk text-3xl sm:text-4xl text-amber-100 font-bold my-1 tracking-wider drop-shadow">
+            <!-- Large Cyrillic Glyph -->
+            <div id="combat-cyrillic-prompt" class="font-folk text-3xl sm:text-4xl text-amber-100 font-bold my-1 tracking-wider drop-shadow-[0_2px_8px_rgba(245,158,11,0.5)]">
               А
             </div>
 
-            <p id="combat-prompt-subtitle" class="text-xs text-stone-300 font-medium leading-snug">Study the rune above, then unleash when ready:</p>
+            <p id="combat-prompt-subtitle" class="text-xs text-amber-200/80 font-medium leading-snug">Study the rune above, then unleash when ready:</p>
           </div>
 
-          <div id="combat-feedback" class="min-h-[20px] px-2 flex items-center justify-center text-center text-[11px] font-mono font-bold transition-opacity opacity-0 text-amber-300 leading-tight">
+          <div id="combat-feedback" class="min-h-[18px] px-2 flex items-center justify-center text-center text-[11px] font-mono font-bold transition-opacity opacity-0 text-amber-300 leading-tight">
             Ready to strike.
           </div>
 
-          <!-- Bottom Control Deck -->
+          <!-- Bottom Combat Control Deck -->
           <div id="combat-input-area" class="pb-0.5">
-            <div id="combat-prime-box" class="py-1">
-              <button id="btn-unleash-strike" class="w-full bg-gradient-to-r from-amber-600 via-amber-500 to-amber-700 hover:from-amber-500 hover:to-amber-600 active:scale-95 text-stone-950 font-fantasy font-black py-3 px-4 rounded-xl text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 glow-gold-pulse">
+            <div id="combat-prime-box" class="py-0.5">
+              <button id="btn-unleash-strike" class="w-full aq-button active:scale-95 text-stone-950 font-fantasy font-black py-2.5 px-4 rounded-xl text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 glow-gold-pulse cursor-pointer">
                 <span>⚔️</span>
                 <span>Нанести Удар • Unleash Strike</span>
               </button>
@@ -617,15 +696,15 @@
 
             <div id="combat-choices-grid" class="hidden grid grid-cols-2 gap-2"></div>
 
-            <div id="combat-parry-box" class="hidden py-1">
-              <button id="btn-raise-shield" class="w-full bg-gradient-to-r from-sky-600 via-sky-500 to-blue-700 hover:from-sky-500 active:scale-95 text-stone-950 font-fantasy font-black py-3 px-4 rounded-xl text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 animate-pulse">
+            <div id="combat-parry-box" class="hidden py-0.5">
+              <button id="btn-raise-shield" class="w-full bg-gradient-to-r from-sky-600 via-sky-500 to-blue-700 hover:from-sky-500 active:scale-95 text-stone-950 font-fantasy font-black py-2.5 px-4 rounded-xl text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 animate-pulse cursor-pointer">
                 <span>🛡️</span>
                 <span>Підняти Щит • Raise Shield (Parry)</span>
               </button>
             </div>
 
-            <div id="combat-continue-box" class="hidden py-1">
-              <button id="btn-force-next-turn" class="w-full bg-stone-800 hover:bg-amber-800 border border-amber-500/70 text-amber-200 font-fantasy font-bold py-2.5 px-4 rounded-xl text-xs uppercase tracking-wider shadow flex items-center justify-center gap-2 active:scale-95 transition-all">
+            <div id="combat-continue-box" class="hidden py-0.5">
+              <button id="btn-force-next-turn" class="w-full bg-stone-900 hover:bg-amber-950 border-2 border-amber-500 text-amber-200 font-fantasy font-bold py-2 px-4 rounded-xl text-xs uppercase tracking-wider shadow flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer">
                 <span>➔</span>
                 <span>Продовжити • Continue Turn</span>
               </button>
@@ -633,14 +712,14 @@
 
             <div id="combat-pouch-drawer" class="hidden space-y-2">
               <div class="grid grid-cols-2 gap-2">
-                <button id="btn-use-elixir" class="border border-emerald-700 bg-emerald-950/75 hover:bg-emerald-900/80 text-emerald-100 p-2.5 rounded-xl flex items-center gap-2.5 active:scale-95 transition-all text-left shadow">
+                <button id="btn-use-elixir" class="border-2 border-emerald-600 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-100 p-2.5 rounded-xl flex items-center gap-2.5 active:scale-95 transition-all text-left shadow">
                   <span class="text-2xl">🧪</span>
                   <div>
                     <p class="font-fantasy font-bold text-xs">Carpathian Elixir</p>
                     <p class="text-[10px] text-emerald-300 font-mono">Heal +35 HP (<span id="count-elixir">0</span> left)</p>
                   </div>
                 </button>
-                <button id="btn-use-scroll" class="border border-sky-700 bg-sky-950/75 hover:bg-sky-900/80 text-sky-100 p-2.5 rounded-xl flex items-center gap-2.5 active:scale-95 transition-all text-left shadow">
+                <button id="btn-use-scroll" class="border-2 border-sky-600 bg-sky-950/80 hover:bg-sky-900 text-sky-100 p-2.5 rounded-xl flex items-center gap-2.5 active:scale-95 transition-all text-left shadow">
                   <span class="text-2xl">📜</span>
                   <div>
                     <p class="font-fantasy font-bold text-xs">Scroll of Clarity</p>
@@ -658,11 +737,11 @@
       </section>
 
       <!-- ============================================================ -->
-      <!-- MODALS                                                       -->
+      <!-- MODALS: DEV, VICTORY, DEFEAT, RESET                          -->
       <!-- ============================================================ -->
       <div id="modal-dev-panel" class="absolute inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-4">
-        <div class="w-full max-w-sm bg-stone-900 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl flex flex-col max-h-[90%] overflow-y-auto">
-          <div class="flex items-center justify-between border-b border-amber-900/50 pb-2 mb-3">
+        <div class="w-full max-w-sm bg-stone-900 aq-gold-border rounded-2xl p-4 shadow-2xl flex flex-col max-h-[90%] overflow-y-auto">
+          <div class="flex items-center justify-between border-b border-amber-900/60 pb-2 mb-3">
             <div class="flex items-center gap-1.5">
               <span class="text-lg">🛠️</span>
               <h3 class="font-fantasy font-bold text-sm text-amber-200">Developer Testing Suite</h3>
@@ -671,7 +750,7 @@
           </div>
 
           <div class="space-y-3 text-xs">
-            <div class="bg-stone-950 border border-stone-800 rounded-xl p-3">
+            <div class="bg-stone-950 border border-amber-900/60 rounded-xl p-3">
               <div class="flex justify-between items-center mb-1">
                 <span class="font-fantasy font-bold text-amber-300">Enemy Hit Damage:</span>
                 <span id="dev-slider-val" class="font-mono text-amber-400 font-bold bg-amber-950/70 border border-amber-700/60 px-1.5 py-0.2 rounded">Default</span>
@@ -682,8 +761,8 @@
               </button>
             </div>
 
-            <div class="bg-stone-950 border border-stone-800 rounded-xl p-3 space-y-2">
-              <span class="font-fantasy font-bold text-amber-300 block mb-1">Combat & Momentum Overrides:</span>
+            <div class="bg-stone-950 border border-amber-900/60 rounded-xl p-3 space-y-2">
+              <span class="font-fantasy font-bold text-amber-300 block mb-1">Combat Overrides:</span>
               <div class="flex items-center justify-between">
                 <span class="text-stone-300">Immunity (God Mode):</span>
                 <button id="btn-dev-toggle-god" class="px-2.5 py-1 rounded text-[11px] font-mono font-bold bg-stone-800 text-stone-400 border border-stone-700">OFF</button>
@@ -694,62 +773,65 @@
                 <button id="btn-dev-fill-focus" class="bg-amber-950/80 hover:bg-amber-900 border border-amber-600 text-amber-200 py-1 rounded text-[10px] font-mono font-bold">⚡ 2 (Cleave)</button>
               </div>
               <div class="grid grid-cols-2 gap-1.5">
-                <button id="btn-dev-streak-0" class="bg-stone-800 hover:bg-stone-700 text-stone-300 py-1 rounded text-[10px] font-mono border border-stone-700">🔥 Reset Streak (0/4)</button>
-                <button id="btn-dev-streak-4" class="bg-amber-950 hover:bg-amber-900 border border-amber-600 text-amber-300 py-1 rounded text-[10px] font-mono font-bold">🔥 Primed Streak (4/4)</button>
+                <button id="btn-dev-streak-0" class="bg-stone-800 hover:bg-stone-700 text-stone-300 py-1 rounded text-[10px] font-mono border border-stone-700">🔥 Reset Streak</button>
+                <button id="btn-dev-streak-4" class="bg-amber-950 hover:bg-amber-900 border border-amber-600 text-amber-300 py-1 rounded text-[10px] font-mono font-bold">🔥 Primed Streak</button>
               </div>
-              <button id="btn-dev-refill-hp" class="w-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600 text-emerald-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">🧪 Full HP Refill (100 HP)</button>
-              <button id="btn-dev-slay-enemy" class="w-full bg-rose-950/80 hover:bg-rose-900 border border-rose-600 text-rose-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">⚡ Slay Active Enemy (Win Battle)</button>
+              <button id="btn-dev-refill-hp" class="w-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600 text-emerald-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">🧪 Full HP Refill</button>
+              <button id="btn-dev-slay-enemy" class="w-full bg-rose-950/80 hover:bg-rose-900 border border-rose-600 text-rose-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">⚡ Slay Active Enemy</button>
             </div>
 
-            <div class="bg-stone-950 border border-stone-800 rounded-xl p-3 space-y-2">
+            <div class="bg-stone-950 border border-amber-900/60 rounded-xl p-3 space-y-2">
               <span class="font-fantasy font-bold text-amber-300 block mb-1">Progression Tools:</span>
-              <button id="btn-dev-unlock-all" class="w-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600 text-emerald-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">🔓 Unlock All Stages (1 to 5)</button>
-              <button id="btn-dev-refill-pouch" class="w-full bg-sky-950/80 hover:bg-sky-900 border border-sky-600 text-sky-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">🎒 Refill Pouch (3 Items)</button>
+              <button id="btn-dev-unlock-all" class="w-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600 text-emerald-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">🔓 Unlock All Stages</button>
+              <button id="btn-dev-refill-pouch" class="w-full bg-sky-950/80 hover:bg-sky-900 border border-sky-600 text-sky-200 py-1.5 rounded-lg font-fantasy font-bold active:scale-95">🎒 Refill Pouch</button>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Victory Modal -->
       <div id="modal-victory" class="absolute inset-0 bg-black/85 backdrop-blur-sm z-40 hidden flex-col items-center justify-center p-6 text-center">
-        <div class="w-full max-w-xs bg-stone-900 border-2 border-amber-500/80 rounded-2xl p-6 shadow-2xl">
+        <div class="w-full max-w-xs bg-stone-900 aq-gold-border rounded-2xl p-6 shadow-2xl">
           <div class="text-4xl mb-1">🏆</div>
-          <span class="text-xs uppercase font-mono tracking-widest text-amber-400">Перемога! • Victory!</span>
+          <span class="text-xs uppercase font-mono tracking-widest text-amber-400 font-bold">Перемога! • Victory!</span>
           <h2 class="text-2xl font-fantasy font-black text-amber-100 mt-1 mb-2">Spirit Vanquished</h2>
           <p class="text-xs text-stone-300 font-folk mb-4 leading-relaxed">Your command of the runes pierced through the ancient woods!</p>
-          <div class="bg-stone-950 border border-stone-800 rounded-xl p-3 mb-4 flex justify-around text-center">
+          <div class="bg-stone-950 border border-amber-900/60 rounded-xl p-3 mb-4 flex justify-around text-center">
             <div>
               <div class="text-[10px] text-stone-400 font-mono">REWARD</div>
               <div id="victory-xp-text" class="text-amber-400 font-bold font-mono text-sm">+60 XP</div>
             </div>
-            <div class="border-r border-stone-800"></div>
+            <div class="border-r border-amber-900/60"></div>
             <div>
               <div class="text-[10px] text-stone-400 font-mono">STATUS</div>
               <div id="victory-unlock-text" class="text-emerald-400 font-bold font-mono text-sm">Stage Cleared</div>
             </div>
           </div>
-          <button id="btn-victory-camp" class="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 active:scale-95 text-stone-950 font-fantasy font-bold py-2.5 rounded-xl text-sm uppercase tracking-wider shadow">
+          <button id="btn-victory-camp" class="w-full aq-button active:scale-95 text-stone-950 font-fantasy font-bold py-2.5 rounded-xl text-sm uppercase tracking-wider shadow">
             Return to Clearing
           </button>
         </div>
       </div>
 
+      <!-- Defeat Modal -->
       <div id="modal-defeat" class="absolute inset-0 bg-black/85 backdrop-blur-sm z-40 hidden flex-col items-center justify-center p-6 text-center">
-        <div class="w-full max-w-xs bg-stone-900 border-2 border-red-700/80 rounded-2xl p-6 shadow-2xl">
+        <div class="w-full max-w-xs bg-stone-900 border-2 border-red-700 rounded-2xl p-6 shadow-2xl">
           <div class="text-4xl mb-1">💀</div>
-          <span class="text-xs uppercase font-mono tracking-widest text-red-400">Поразка • Defeat</span>
+          <span class="text-xs uppercase font-mono tracking-widest text-red-400 font-bold">Поразка • Defeat</span>
           <h2 class="text-2xl font-fantasy font-black text-stone-100 mt-1 mb-2">Overwhelmed</h2>
           <p class="text-xs text-stone-300 font-folk mb-4 leading-relaxed">
             The primeval spirits drove you back to the clearing. Your stage progression has been reset, but your level and knowledge remain intact!
           </p>
           <div class="flex gap-2">
             <button id="btn-defeat-retry" class="flex-1 bg-gradient-to-r from-red-700 to-red-800 hover:from-red-600 text-stone-100 font-fantasy font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider shadow">Restart Journey</button>
-            <button id="btn-defeat-camp" class="flex-1 bg-stone-800 hover:bg-stone-700 text-amber-200 font-fantasy font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider border border-stone-700">Prep at Camp</button>
+            <button id="btn-defeat-camp" class="flex-1 bg-stone-800 hover:bg-stone-700 text-amber-200 font-fantasy font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider border border-amber-900">Prep at Camp</button>
           </div>
         </div>
       </div>
 
+      <!-- Reset Progress Modal -->
       <div id="modal-reset" class="absolute inset-0 bg-black/85 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-6 text-center">
-        <div class="w-full max-w-xs bg-stone-900 border-2 border-rose-700/80 rounded-2xl p-5 shadow-2xl">
+        <div class="w-full max-w-xs bg-stone-900 border-2 border-rose-700 rounded-2xl p-5 shadow-2xl">
           <h3 class="text-lg font-fantasy font-bold text-amber-100 mb-1">Reset Chronicle Progress?</h3>
           <p class="text-xs text-stone-400 mb-4">This will reset your XP, stages, and pouch back to Stage I.</p>
           <div class="flex gap-2">
@@ -761,7 +843,8 @@
 
     </main>
 
-    <div class="scanlines absolute inset-0 z-20 pointer-events-none opacity-25"></div>
+    <!-- Scanline Texture -->
+    <div class="scanlines absolute inset-0 z-20 pointer-events-none opacity-20"></div>
   </div>
 
   <script src="data.js"></script>
