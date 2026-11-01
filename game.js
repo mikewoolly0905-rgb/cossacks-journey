@@ -118,21 +118,42 @@ const AudioEngine = {
     });
   },
 
-  pronounce(text) {
+  pronounce(text, audioFileKey = null) {
     if (!this.enabled) return;
-    this.playTone(528, 'sine', 0.08, 0.08);
+    this.playTone(528, 'sine', 0.08, 0.08); // Tactile audio chime
+
+    // Determine target filename (uses explicit audioFileKey, or sanitizes text)
+    const cleanKey = (audioFileKey || text).toString().trim().toLowerCase();
+    const audioPath = `audio/${encodeURIComponent(cleanKey)}.mp3`;
+
+    // Attempt to load and play dedicated audio asset
+    const sound = new Audio(audioPath);
+    sound.play().catch(() => {
+      // Graceful fallback to browser's SpeechSynthesis engine
+      this.fallbackSpeechSynthesis(text);
+    });
+  },
+
+  fallbackSpeechSynthesis(text) {
     if (!('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       const cleanText = String(text).replace(/\s*\/\s*/g, ', ');
       const utter = new SpeechSynthesisUtterance(cleanText);
+
+      // Match system Ukrainian voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const ukVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('uk'));
+      if (ukVoice) {
+        utter.voice = ukVoice;
+      }
+
       utter.lang = 'uk-UA';
       utter.rate = 0.85;
       utter.onerror = () => {};
       window.speechSynthesis.speak(utter);
     } catch (e) {}
-  }
-};
+  },
 
 const DeckManager = {
   bags: {},
@@ -1708,7 +1729,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-combat-pronounce').addEventListener('click', () => {
     const ch = CombatEngine.phase === 'PARRY_PRIMED' || CombatEngine.phase === 'PARRY_ACTIVE' ? CombatEngine.lockedChallenges.parry : CombatEngine.lockedChallenges[CombatEngine.lastAttackTab];
-    if (ch) AudioEngine.pronounce(ch.speakText);
+    if (ch) AudioEngine.pronounce(ch.speakText, ch.audioKey);
   });
 
   document.getElementById('btn-use-elixir').addEventListener('click', () => CombatEngine.useElixir());
