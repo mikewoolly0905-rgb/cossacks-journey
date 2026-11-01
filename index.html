@@ -41,28 +41,57 @@
       box-shadow: 0 1px 0 #451a03, inset 0 1px 0 rgba(254, 243, 199, 0.6);
     }
 
-    /* AdventureQuest 2D Puppet Animation Tweens */
-    @keyframes aqBreathe {
-      0%, 100% { transform: translateY(0px) scale(1, 1); }
-      50% { transform: translateY(-2.5px) scale(1.02, 0.99); }
+    /* AdventureQuest Single-Sprite Animations */
+    @keyframes aqHeroBreathe {
+      0%, 100% {
+        transform: translateY(0px) scale(1, 1) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-3px) scale(0.99, 1.02) rotate(0.6deg);
+      }
     }
-    @keyframes aqArmSway {
-      0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(-6deg); }
+
+    .aq-hero-idle {
+      animation: aqHeroBreathe 2.4s ease-in-out infinite;
+      transform-origin: bottom center;
+      will-change: transform;
     }
-    @keyframes aqCapeFlutter {
-      0%, 100% { transform: skewX(0deg); }
-      50% { transform: skewX(-4deg) scaleX(0.97); }
+
+    /* Combat Strike Lunge */
+    @keyframes heroLungeSlash {
+      0%   { transform: translateX(0) scale(1); }
+      20%  { transform: translateX(-8px) rotate(-4deg); }
+      60%  { transform: translateX(38px) scale(1.08) rotate(5deg); }
+      100% { transform: translateX(0) scale(1) rotate(0deg); }
     }
+
+    .hero-strike-anim {
+      animation: heroLungeSlash 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform-origin: bottom center;
+    }
+
+    /* Hit Recoil & Flash */
+    @keyframes heroRecoilHurt {
+      0%   { transform: translateX(0); filter: drop-shadow(0 10px 14px rgba(0,0,0,0.85)); }
+      25%  { transform: translateX(-14px) rotate(-5deg); filter: brightness(1.7) drop-shadow(0 0 12px rgba(239,68,68,0.9)); }
+      100% { transform: translateX(0) rotate(0deg); filter: drop-shadow(0 10px 14px rgba(0,0,0,0.85)); }
+    }
+
+    .hero-hurt-anim {
+      animation: heroRecoilHurt 0.42s ease-out;
+      transform-origin: bottom center;
+    }
+
+    /* Enemy Idle Float */
     @keyframes enemyFloat {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-4px); }
     }
 
-    .aq-hero-idle { animation: aqBreathe 2.5s ease-in-out infinite; transform-origin: bottom center; }
-    .aq-weapon-idle { animation: aqArmSway 2.5s ease-in-out infinite; transform-origin: 30px 48px; }
-    .aq-cape-idle { animation: aqCapeFlutter 3s ease-in-out infinite; transform-origin: top left; }
-    .aq-enemy-idle { animation: enemyFloat 3s ease-in-out infinite; transform-origin: bottom center; }
+    .aq-enemy-idle { 
+      animation: enemyFloat 3s ease-in-out infinite; 
+      transform-origin: bottom center; 
+    }
 
     /* Scanlines Overlay */
     .scanlines {
@@ -515,7 +544,7 @@
           <!-- Combatants Stage Floor -->
           <div class="relative z-10 flex items-end justify-between px-2 pt-1 pb-1 flex-1">
             
-            <!-- PLAYER (AQ Vector Puppet) -->
+            <!-- PLAYER (AQ Hero Illustrated Sprite) -->
             <div class="flex flex-col items-center relative w-36">
               <div id="player-dmg-anchor" class="absolute -top-7 z-30 font-fantasy font-black text-lg drop-shadow pointer-events-none"></div>
 
@@ -535,42 +564,12 @@
                 </div>
               </div>
 
-              <!-- Animated Vector Cossack -->
-              <div id="player-sprite" class="transition-transform duration-200 relative">
-                <div class="w-24 h-24 flex items-center justify-center">
-                  <svg class="w-full h-full drop-shadow-[0_12px_14px_rgba(0,0,0,0.85)]" viewBox="0 0 120 135" fill="none" stroke="#1c1917" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- Red Cape Layer -->
-                    <path class="aq-cape-idle" d="M36 50 C20 70, 16 105, 24 125 C36 120, 50 122, 56 120 Z" fill="#991b1b" stroke-width="2.5"/>
-                    
-                    <!-- Hero Torso & Legs -->
-                    <g class="aq-hero-idle">
-                      <!-- Boots -->
-                      <path d="M42 100 L38 126 L52 126 L52 100" fill="#292524" stroke-width="2.5"/>
-                      <path d="M60 100 L60 126 L74 126 L70 100" fill="#292524" stroke-width="2.5"/>
-                      <!-- Blue Sharovary Pants -->
-                      <path d="M35 74 C22 92, 32 106, 48 104 C54 96, 58 96, 64 104 C78 106, 88 92, 77 74 Z" fill="#1e3a8a" stroke-width="3"/>
-                      <!-- Red Embroidered Tunic -->
-                      <path d="M38 44 L74 44 L70 78 L42 78 Z" fill="#b91c1c" stroke-width="2.5"/>
-                      <!-- Gold Sash / Cossack Belt -->
-                      <rect x="38" y="70" width="34" height="8" rx="2" fill="#f59e0b" stroke-width="2"/>
-                      
-                      <!-- Head & Moustache -->
-                      <circle cx="56" cy="30" r="14" fill="#fed7aa" stroke-width="2.5"/>
-                      <path d="M48 36 C52 40, 60 40, 64 36" stroke-width="2.5" fill="none"/>
-                      <path d="M54 16 C46 5, 28 8, 32 24" stroke-width="3.5" fill="none"/> <!-- Oseledets hair -->
-                      <circle cx="51" cy="28" r="1.5" fill="#1c1917" stroke="none"/>
-                      <circle cx="61" cy="28" r="1.5" fill="#1c1917" stroke="none"/>
-                    </g>
-
-                    <!-- Sabre Arm & Carpathian Steel -->
-                    <g class="aq-weapon-idle">
-                      <path d="M68 46 Q80 54 84 66" stroke-width="6" stroke="#b91c1c"/>
-                      <circle cx="84" cy="66" r="4" fill="#f59e0b" stroke-width="2"/>
-                      <!-- Inked Curved Sabre Blade -->
-                      <path d="M84 66 Q106 42 110 14 Q100 36 82 64 Z" fill="#f8fafc" stroke="#334155" stroke-width="2.5"/>
-                      <path d="M86 62 Q102 42 106 20" stroke="#94a3b8" stroke-width="1.5" fill="none"/>
-                    </g>
-                  </svg>
+              <!-- Animated Raster Cossack Sprite -->
+              <div id="player-sprite" class="transition-transform duration-200 relative aq-hero-idle">
+                <div class="w-24 h-28 sm:w-28 sm:h-32 flex items-end justify-center">
+                  <img src="Assets/characters/cossack_idle.webp" 
+                       alt="Cossack Hero" 
+                       class="max-w-full max-h-full object-contain filter drop-shadow-[0_12px_14px_rgba(0,0,0,0.85)] pointer-events-none select-none" />
                 </div>
               </div>
             </div>
