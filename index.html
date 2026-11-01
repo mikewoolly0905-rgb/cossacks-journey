@@ -1,52 +1,359 @@
+    <!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cossack's Journey: Chronicles of the Carpathian Woods</title>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0c0a09;
+      color: #fef3c7;
+      font-family: system-ui, -apple-system, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .hidden { display: none !important; }
+
+    /* Shell */
+    #app-container {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      height: 100dvh;
+      background: #1c1917;
+      border: 2px solid #78350f;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+    @media (min-width: 640px) {
+      #app-container { height: 860px; border-radius: 1.5rem; }
+    }
+
+    /* Header */
+    header {
+      background: rgba(12, 10, 9, 0.95);
+      border-bottom: 1px solid rgba(120, 53, 15, 0.5);
+      padding: 0.5rem 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+    }
+    .badge-hp {
+      background: #4c0519;
+      color: #fecdd3;
+      border: 1px solid rgba(159, 18, 57, 0.6);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+    .hp-track {
+      width: 80px;
+      height: 6px;
+      background: #292524;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .hp-fill {
+      background: #e11d48;
+      height: 100%;
+      width: 100%;
+      transition: width 0.3s;
+    }
+
+    /* Views */
+    main {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background: #171412;
+    }
+    .view-panel {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0.85rem;
+      overflow-y: auto;
+    }
+
+    /* Station Cards */
+    .station-box {
+      background: rgba(28, 25, 23, 0.85);
+      border: 1px solid rgba(120, 53, 15, 0.5);
+      border-radius: 1rem;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .station-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .opt-grid { display: grid; gap: 0.5rem; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    button.btn-opt {
+      background: #292524;
+      border: 1px solid #78350f;
+      color: #fef3c7;
+      padding: 0.5rem;
+      border-radius: 0.6rem;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button.btn-opt:hover { background: #451a03; border-color: #d97706; }
+    button.btn-opt:active { transform: scale(0.96); }
+
+    .btn-march {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(to right, #b45309, #78350f);
+      border: 2px solid #d97706;
+      border-radius: 1rem;
+      color: #fff;
+      font-weight: bold;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+
+    /* Combat Screen */
+    .enemy-card {
+      background: rgba(28, 25, 23, 0.95);
+      border: 1px solid rgba(120, 53, 15, 0.6);
+      border-radius: 1rem;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .enemy-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 0.75rem;
+      background: #451a03;
+      border: 1px solid #d97706;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .crit-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #292524;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+      border: 1px solid #78350f;
+    }
+    #crit-timer-bar {
+      height: 100%;
+      width: 0%;
+      background: #f59e0b;
+      transition: width 0.05s linear;
+    }
+
+    /* Parry Box (Hidden by default) */
+    #parry-prompt-box {
+      position: absolute;
+      inset: 20% 1rem auto 1rem;
+      background: rgba(76, 5, 25, 0.96);
+      border: 2px solid #f43f5e;
+      border-radius: 1rem;
+      padding: 1rem;
+      text-align: center;
+      z-index: 50;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8);
+    }
+
+    /* Screen Flash */
+    #screen-flash { position: absolute; inset: 0; pointer-events: none; z-index: 60; }
+    .flash-crit { background: rgba(245, 158, 11, 0.4); }
+    .flash-damage { background: rgba(220, 38, 38, 0.4); }
+    .flash-parry { background: rgba(56, 189, 248, 0.4); }
+    .flash-heal { background: rgba(16, 185, 129, 0.4); }
+
+    /* Damage numbers */
+    @keyframes floatDamage {
+      0% { transform: translateY(0px) scale(0.8); opacity: 0; }
+      20% { transform: translateY(-8px) scale(1.1); opacity: 1; }
+      100% { transform: translateY(-36px); opacity: 0; }
+    }
+    .animate-float-damage {
+      animation: floatDamage 1s ease-out forwards;
+      font-weight: 900;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- Top Persistent Header -->
+    <header>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:16px;">⚜</span>
+        <div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-weight:bold; font-size:12px; color:#f59e0b;">КОЗАК</span>
+            <span id="player-hp-label" class="badge-hp">100/100 HP</span>
+          </div>
+          <div class="hp-track">
+            <div id="player-hp-bar" class="hp-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div id="header-pouch-pill" style="background:#292524; padding:3px 8px; border-radius:6px; font-size:11px; border:1px solid #78350f;">
+          🎒 <span id="pouch-count-label" style="color:#f59e0b; font-weight:bold;">1/3</span>
+        </div>
+        <button id="btn-toggle-sound" style="background:#292524; border:1px solid #44403c; color:#f59e0b; padding:4px 8px; border-radius:6px; cursor:pointer;">
+          <span id="icon-sound-on">🔊</span>
+          <span id="icon-sound-off" class="hidden">🔇</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="screen-flash"></div>
+
+    <!-- Main Viewport -->
+    <main>
+
+      <!-- VIEW 1: CAMP CLEARING -->
+      <section id="view-camp" class="view-panel">
+        <div>
+          <div style="text-align:center; margin: 6px 0 12px 0;">
+            <p style="font-size:10px; color:#f59e0b; letter-spacing:1px; text-transform:uppercase;">Карпатська Поляна • The Clearing</p>
+            <h1 style="font-size:20px; color:#fef3c7; font-weight:bold;">Campfire Rituals</h1>
+          </div>
+
+          <!-- Whetstone -->
+          <div class="station-box">
+            <div class="station-header">
+              <span style="color:#f59e0b;">⚔️ Whetstone: Hone Rune</span>
+              <span id="whetstone-rune-symbol" style="font-size:18px; color:#fbbf24; font-weight:bold;">В</span>
+            </div>
+            <div id="whetstone-options" class="opt-grid grid-3"></div>
+          </div>
+
+          <!-- Cauldron -->
+          <div class="station-box" style="border-color: rgba(5, 150, 105, 0.4);">
+            <div class="station-header">
+              <span style="color:#10b981;">🧪 Cauldron: Brew Tonic</span>
+              <span id="cauldron-target-label" style="font-size:11px; color:#34d399;">Combine Water</span>
+            </div>
+            <div id="cauldron-options" class="opt-grid grid-2"></div>
+          </div>
+
+          <!-- Scout -->
+          <div class="station-box" style="border-color: rgba(14, 165, 233, 0.4);">
+            <div class="station-header">
+              <span style="color:#38bdf8;">👁️ Scout: Sense the Wilds</span>
+              <span id="scout-verb-prompt" style="font-size:11px; color:#7dd3fc;">"I see"</span>
+            </div>
+            <div id="scout-options" class="opt-grid grid-3"></div>
+          </div>
+        </div>
+
+        <!-- March Button -->
+        <div style="border-top:1px solid #451a03; padding-top:8px;">
+          <div style="display:flex; justify-content:space-around; margin-bottom:8px; font-size:11px;">
+            <span id="badge-camp-edge" style="color:#78716c;">⚔️ Sabre Dull</span>
+            <span id="badge-camp-sight" style="color:#78716c;">👁️ Blind Trail</span>
+          </div>
+          <button id="btn-march-woods" class="btn-march">🌲 March into the Woods ➔</button>
+        </div>
+      </section>
+
+      <!-- VIEW 2: COMBAT ARENA -->
+      <section id="view-combat" class="view-panel hidden">
+        <div>
+          <!-- Enemy Header -->
+          <div class="enemy-card">
+            <div id="enemy-portrait-box" class="enemy-avatar">
+              <span id="enemy-avatar-char">👺</span>
+            </div>
+            <div style="flex:1;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="enemy-name-label" style="font-size:14px; font-weight:bold; color:#fde68a;">Лісовий Чорт</h2>
+                <span id="enemy-hp-label" style="font-size:11px; color:#f87171; font-weight:bold;">55/55 HP</span>
+              </div>
+              <p id="enemy-title-label" style="font-size:10px; color:#a8a29e;">Woodland Imp</p>
+              <div class="hp-track" style="width:100%; margin-top:4px;">
+                <div id="enemy-hp-bar" class="hp-fill"></div>
               </div>
             </div>
           </div>
+
+          <p id="weather-tag" style="text-align:right; font-size:10px; color:#78716c; margin-top:4px;">✨ Clear Night</p>
+
+          <!-- Prompt Area -->
+          <div style="margin-top:20px; text-align:center;">
+            <div class="crit-bar-track">
+              <div id="crit-timer-bar"></div>
+            </div>
+
+            <div style="background:#292524; padding:16px; border-radius:12px; border:1px solid #78350f;">
+              <div id="combat-target-symbol" style="font-size:36px; font-weight:bold; color:#f59e0b;">В</div>
+              <p id="combat-target-hint" style="font-size:11px; color:#a8a29e;">Hint: /v/ sound</p>
+            </div>
+
+            <div id="combat-options-grid" class="opt-grid grid-3" style="margin-top:10px;"></div>
+          </div>
         </div>
 
-        <!-- Strike Critical Window & Prompt Center -->
-        <div class="my-auto text-center px-2">
-          <!-- Critical Reaction Bar -->
-          <div class="w-full h-2 bg-stone-800 rounded-full overflow-hidden border border-amber-900/60 mb-3">
-            <div id="crit-timer-bar" class="h-full bg-amber-400 w-0 transition-all duration-75"></div>
-          </div>
-
-          <div class="bg-stone-900/80 border border-amber-800/40 rounded-2xl p-4 shadow-inner">
-            <div id="combat-target-symbol" class="text-4xl font-extrabold font-fantasy text-amber-400 mb-1">В</div>
-            <p id="combat-target-hint" class="text-xs text-stone-400 font-mono">Hint: /v/ sound</p>
-          </div>
-
-          <!-- Answer Options -->
-          <div id="combat-options-grid" class="grid grid-cols-3 gap-2 mt-3"></div>
-        </div>
-
-        <!-- Dynamic Parry Intercept Prompt (Appears on Enemy Turn) -->
-        <div id="parry-prompt-box" class="absolute inset-x-4 top-1/3 p-4 bg-rose-950/95 border-2 border-rose-500 rounded-2xl text-center shadow-2xl z-40 hidden">
-          <span class="text-xs uppercase tracking-widest text-rose-300 font-mono font-bold animate-pulse">Incoming Strike!</span>
-          <h3 class="text-lg font-fantasy text-white font-extrabold mt-1 mb-2">PARRY NOW!</h3>
-          <button id="btn-parry-action" class="w-full py-3 bg-rose-600 hover:bg-rose-500 border border-rose-300 text-white font-fantasy font-black text-sm rounded-xl uppercase tracking-wider active:scale-95 shadow-lg">
+        <!-- Parry Prompt Overlay (Only shows when enemy attacks) -->
+        <div id="parry-prompt-box" class="hidden">
+          <p style="font-size:10px; color:#fca5a5; font-weight:bold; letter-spacing:1px; text-transform:uppercase;">Incoming Strike!</p>
+          <h3 style="font-size:18px; color:#ffffff; font-weight:900; margin:4px 0 8px 0;">PARRY NOW!</h3>
+          <button id="btn-parry-action" style="width:100%; padding:10px; background:#e11d48; color:#fff; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
             🛡️ DEFLECT SABRE
           </button>
         </div>
 
-        <!-- Player Action Toolbar: Quick, Cleave, Elixir -->
-        <div class="pt-2 border-t border-amber-950/80">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] text-amber-500 font-mono uppercase">Momentum:</span>
-              <div id="pip-1" class="w-3.5 h-3.5 rounded-full bg-stone-800 border border-stone-700"></div>
-              <div id="pip-2" class="w-3.5 h-3.5 rounded-full bg-stone-800 border border-stone-700"></div>
-              <div id="pip-3" class="w-3.5 h-3.5 rounded-full bg-stone-800 border border-stone-700"></div>
+        <!-- Player Actions -->
+        <div style="border-top:1px solid #451a03; padding-top:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:10px; color:#f59e0b;">Momentum:</span>
+              <div id="pip-1" style="width:12px; height:12px; border-radius:50%; background:#292524; border:1px solid #57534e;"></div>
+              <div id="pip-2" style="width:12px; height:12px; border-radius:50%; background:#292524; border:1px solid #57534e;"></div>
+              <div id="pip-3" style="width:12px; height:12px; border-radius:50%; background:#292524; border:1px solid #57534e;"></div>
             </div>
-            <button id="btn-use-elixir" class="px-2.5 py-1 bg-stone-900 border border-emerald-800 text-emerald-300 text-xs rounded-lg active:scale-95 font-mono">
+            <button id="btn-use-elixir" style="background:#292524; border:1px solid #065f46; color:#34d399; font-size:11px; padding:3px 8px; border-radius:6px; cursor:pointer;">
               🧪 Drink Elixir (+35)
             </button>
           </div>
 
-          <div class="flex gap-2">
-            <button id="btn-unleash" class="flex-1 py-3 bg-amber-700 hover:bg-amber-600 border border-amber-500 rounded-2xl text-amber-100 font-fantasy font-bold text-xs uppercase tracking-wider active:scale-95">
+          <div style="display:flex; gap:8px;">
+            <button id="btn-unleash" style="flex:1; padding:12px; background:#b45309; border:1px solid #f59e0b; color:#fff; border-radius:10px; font-weight:bold; cursor:pointer;">
               ⚔️ Strike Ready
             </button>
-            <button id="btn-cleave" class="flex-1 py-3 bg-stone-900 border border-stone-800 text-stone-600 rounded-2xl font-fantasy font-bold text-xs uppercase tracking-wider cursor-not-allowed">
+            <button id="btn-cleave" style="flex:1; padding:12px; background:#292524; border:1px solid #44403c; color:#78716c; border-radius:10px; font-weight:bold; cursor:not-allowed;">
               ⚡ Runic Cleave
             </button>
           </div>
@@ -56,10 +363,8 @@
     </main>
   </div>
 
-  <!-- MODULAR DEPENDENCY SCRIPTS -->
-  <!-- 1. Pure Data First -->
+  <!-- SATELLITE MODULES -->
   <script src="data.js"></script>
-  <!-- 2. Logic, Camp & Combat Engine Second -->
   <script src="game.js"></script>
 </body>
 </html>
