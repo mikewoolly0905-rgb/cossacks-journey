@@ -37,7 +37,7 @@ const AudioEngine = {
   ctx: null,
   enabled: true,
   ukVoice: null,
-  useLocalAudio: false, // Set to true once you drop your recorded .mp3/.wav files into /audio
+  useLocalAudio: false,
 
   init() {
     if (!this.ctx) {
@@ -54,12 +54,8 @@ const AudioEngine = {
       const voices = window.speechSynthesis.getVoices();
       if (!voices || voices.length === 0) return;
 
-      // 1. Primary: Exact Ukrainian voice
       this.ukVoice = voices.find(v => v.lang && (v.lang.toLowerCase().startsWith('uk') || v.lang.includes('UA')));
 
-      // 2. Fallback: If device lacks Ukrainian (common on iOS / Windows),
-      // fallback to an available Slavic/Eastern voice, or system default
-      // rather than failing silently with zero audio.
       if (!this.ukVoice) {
         this.ukVoice = voices.find(v => v.lang && v.lang.startsWith('ru')) || 
                        voices.find(v => v.default) || 
@@ -796,6 +792,29 @@ const RitualSystem = {
   }
 };
 
+/* Animation Triggers for the Single Illustrated Cossack Sprite */
+function triggerHeroAttackAnim() {
+  const hero = document.getElementById('player-sprite');
+  if (!hero) return;
+  hero.classList.remove('aq-hero-idle');
+  hero.classList.add('hero-strike-anim');
+  TimerManager.set(() => {
+    hero.classList.remove('hero-strike-anim');
+    hero.classList.add('aq-hero-idle');
+  }, 380);
+}
+
+function triggerHeroHurtAnim() {
+  const hero = document.getElementById('player-sprite');
+  if (!hero) return;
+  hero.classList.remove('aq-hero-idle');
+  hero.classList.add('hero-hurt-anim');
+  TimerManager.set(() => {
+    hero.classList.remove('hero-hurt-anim');
+    hero.classList.add('aq-hero-idle');
+  }, 420);
+}
+
 const CombatEngine = {
   tier: null,
   weather: null,
@@ -1114,8 +1133,7 @@ const CombatEngine = {
       this.showFeedback("Rune recognized!", "text-emerald-400");
 
       TimerManager.set(() => {
-        const pSprite = document.getElementById('player-sprite');
-        if (pSprite) pSprite.classList.add('translate-x-5');
+        triggerHeroAttackAnim();
 
         if (isCrit) {
           AudioEngine.critStrike();
@@ -1127,12 +1145,10 @@ const CombatEngine = {
           AudioEngine.strike();
           this.triggerScreenEffect('', 'shake-light');
         }
-      }, 380);
+      }, 200);
 
       TimerManager.set(() => {
-        const pSprite = document.getElementById('player-sprite');
         const slash = document.getElementById('enemy-slash-fx');
-        if (pSprite) pSprite.classList.remove('translate-x-5');
         if (slash) {
           slash.classList.remove('hidden');
           TimerManager.set(() => slash.classList.add('hidden'), 280);
@@ -1312,6 +1328,7 @@ const CombatEngine = {
       const isRiposte = GameState.buffForesight;
 
       if (isRiposte) {
+        triggerHeroAttackAnim();
         AudioEngine.parryRiposte();
         this.triggerScreenEffect('flash-parry', 'shake-light');
         const counter = 12;
@@ -1416,6 +1433,7 @@ const CombatEngine = {
       TimerManager.set(() => eSprite.classList.remove('-translate-x-4'), 300);
     }
 
+    triggerHeroHurtAnim();
     this.triggerScreenEffect('flash-damage', 'shake-light');
     this.playerHp = Math.max(0, this.playerHp - dmg);
     GameState.playerHp = this.playerHp;
@@ -1565,7 +1583,7 @@ const CodexSystem = {
 
 window.addEventListener('DOMContentLoaded', () => {
   GameState.load();
-// Unlock audio context on initial iPhone/browser touch
+
   const unlockAudio = () => {
     AudioEngine.init();
     if (AudioEngine.ctx && AudioEngine.ctx.state === 'suspended') {
@@ -1576,6 +1594,7 @@ window.addEventListener('DOMContentLoaded', () => {
   };
   document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
   document.addEventListener('click', unlockAudio, { once: true });
+
   document.getElementById('btn-toggle-dev').addEventListener('click', () => {
     const modal = document.getElementById('modal-dev-panel');
     modal.classList.remove('hidden');
