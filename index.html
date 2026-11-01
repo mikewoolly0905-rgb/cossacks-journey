@@ -592,13 +592,24 @@
             </button>
           </div>
 
-          <!-- Central Ukrainian Challenge Card -->
+          <!-- Central Ukrainian Challenge Card (With Mastery Streak Header) -->
           <div id="combat-card-container" class="relative bg-stone-950/95 border border-amber-900/60 rounded-2xl p-3 shadow-xl flex flex-col items-center justify-center text-center my-1 overflow-hidden">
-            <div id="combat-timer-wrapper" class="absolute top-0 left-0 right-0 h-1.5 bg-stone-800">
-              <div id="combat-timer-bar" class="h-full bg-gradient-to-r from-amber-400 via-amber-500 to-emerald-400 w-full transition-all duration-75"></div>
+            
+            <!-- Mastery Streak Indicator (Replaces Anxiety Timer) -->
+            <div id="combat-streak-wrapper" class="w-full flex items-center justify-between px-3 py-1 bg-stone-900/60 border-b border-amber-900/30 -mt-3 mb-2 -mx-3">
+              <span class="text-[9px] font-mono uppercase tracking-wider text-stone-400 flex items-center gap-1">
+                <span>🔥</span> <span>Mastery Streak:</span>
+              </span>
+              <div class="flex items-center gap-1.5">
+                <div id="streak-pip-1" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
+                <div id="streak-pip-2" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
+                <div id="streak-pip-3" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
+                <div id="streak-pip-4" class="w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900 transition-all"></div>
+                <span id="lbl-streak-bonus" class="text-[9px] font-mono text-stone-500 ml-1 font-bold">0/4</span>
+              </div>
             </div>
 
-            <div class="w-full flex items-center justify-between mb-0.5 mt-1">
+            <div class="w-full flex items-center justify-between mb-0.5">
               <span id="combat-lock-indicator" class="text-[9px] font-mono text-stone-400 bg-stone-900/90 border border-stone-800 px-2 py-0.5 rounded-full flex items-center gap-1">
                 <span>🔒</span> <span id="combat-lock-label">Turn #1</span>
               </span>
@@ -611,7 +622,7 @@
 
             <div class="flex items-center gap-2">
               <span id="combat-prompt-mode" class="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">Quick Strike • Rune Match</span>
-              <span id="crit-status-pill" class="text-[9px] font-mono px-1.5 py-0.2 bg-amber-950 border border-amber-600 text-amber-300 rounded font-bold">Inspect Rune</span>
+              <span id="crit-status-pill" class="text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded">Streak: 0/4</span>
             </div>
 
             <div id="combat-cyrillic-prompt" class="font-folk text-3xl sm:text-4xl text-amber-100 font-bold my-1 tracking-wider drop-shadow">
@@ -720,6 +731,16 @@
                 </button>
                 <button id="btn-dev-fill-focus" class="bg-amber-950/80 hover:bg-amber-900 border border-amber-600 text-amber-200 py-1 rounded text-[10px] font-mono font-bold">
                   ⚡ 2 (Cleave)
+                </button>
+              </div>
+
+              <!-- Instant Streak Triggers -->
+              <div class="grid grid-cols-2 gap-1.5">
+                <button id="btn-dev-streak-0" class="bg-stone-800 hover:bg-stone-700 text-stone-300 py-1 rounded text-[10px] font-mono border border-stone-700">
+                  🔥 Reset Streak (0/4)
+                </button>
+                <button id="btn-dev-streak-4" class="bg-amber-950 hover:bg-amber-900 border border-amber-600 text-amber-300 py-1 rounded text-[10px] font-mono font-bold">
+                  🔥 Primed Streak (4/4)
                 </button>
               </div>
 
