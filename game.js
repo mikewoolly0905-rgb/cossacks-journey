@@ -1548,10 +1548,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.getElementById('btn-dev-unlock-all').addEventListener('click', () => {
-    GameState.unlockedTier = 4;
-    GameState.save();
-  });
+document.getElementById('btn-dev-unlock-all').addEventListener('click', () => {
+  const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
+  GameState.unlockedTier = maxAvailableTiers;
+  GameState.save();
+  GameState.syncUI();
+});
 
   document.getElementById('btn-dev-refill-pouch').addEventListener('click', () => {
     GameState.pouch = ['elixir', 'elixir', 'scroll'];
