@@ -1,6 +1,6 @@
 /**
  * Cossack's Journey: Chronicles of the Carpathian Woods
- * MODULE: data.js - World 1: The Runic Thicket (Rebalanced 5-Stage Curriculum)
+ * MODULE: data.js - World 1: The Runic Thicket
  */
 
 window.WeatherData = [
@@ -22,9 +22,6 @@ window.CurriculumData = {
     elixirHealAmount: 35
   },
   tiers: [
-    // -------------------------------------------------------------------------
-    // STAGE 1: True Cognates & Opening Anchors (7 Letters)
-    // -------------------------------------------------------------------------
     {
       id: 1,
       roman: "I",
@@ -63,10 +60,6 @@ window.CurriculumData = {
         { cyrillic: "МАМА", speakText: "мама", prompt: "Blend the familiar cognates М + А + М + А:", sound: "MAMA (Mother)", mnemonic: "М (M) + А (A) + М (M) + А (A) = МАМА (Mother).", wrong: ["TATO (Father)", "VODA (Water)", "BABA (Grandmother)"] }
       ]
     },
-
-    // -------------------------------------------------------------------------
-    // STAGE 2: False Friends & Heavy Consonants (7 Letters)
-    // -------------------------------------------------------------------------
     {
       id: 2,
       roman: "II",
@@ -102,10 +95,6 @@ window.CurriculumData = {
         { cyrillic: "ПЕС", speakText: "пес", prompt: "Blend portal П + Е + hissing С into sound:", sound: "PES (Dog)", mnemonic: "П (P) + Е (E) + С (S) = ПЕС (Pes - Dog).", wrong: ["LES (Forest)", "NOS (Nose)", "KOS (Blackbird)"] }
       ]
     },
-
-    // -------------------------------------------------------------------------
-    // STAGE 3: Distinctive Ukrainian Phonetics (7 Letters)
-    // -------------------------------------------------------------------------
     {
       id: 3,
       roman: "III",
@@ -142,10 +131,6 @@ window.CurriculumData = {
         { cyrillic: "ЧАС", speakText: "час", prompt: "Combine Ч + А + С to read this word:", sound: "CHAS (Time)", mnemonic: "Ч (CH) + А (A) + С (S) = ЧАС (Time).", wrong: ["SHAS (Step)", "KAS (Chest)", "PAS (Belt)"] }
       ]
     },
-
-    // -------------------------------------------------------------------------
-    // STAGE 4: Sibilants, Gutturals & The Soft Sign (8 Letters)
-    // -------------------------------------------------------------------------
     {
       id: 4,
       roman: "IV",
@@ -174,7 +159,7 @@ window.CurriculumData = {
         { cyrillic: "Ю", speakText: "ю", sound: "YU (as in Universe)", mnemonic: "Pillar linked to a loop — sounds like 'YU'!", wrong: ["OO (as in Moon)", "YA (as in Yard)", "YO (as in Yolk)"] },
         { cyrillic: "Я", speakText: "я", sound: "YA (as in Yard) / 'I'", mnemonic: "Reversed R — means 'YA' and also the pronoun 'I'!", wrong: ["R (as in River)", "YE (as in Yes)", "YU (as in Youth)"] },
         { cyrillic: "Х", speakText: "х", sound: "KH (throaty H as in Bach)", mnemonic: "Crossing sabres: raspy throat friction 'KH'!", wrong: ["K (as in King)", "X (as in Box)", "S (as in Sun)"] },
-        { cyrillic: "Ь", speakText: "м'який знак", sound: "Soft Sign (Softens consonants)", mnemonic: "Makes no sound itself; softens the letter right before it!", wrong: ["B (as in Boat)", "V (as in Vine)", "P (as in Pine)"] }
+        { cyrillic: "Ь", speakText: "ь", sound: "Soft Sign (Softens consonants)", mnemonic: "Makes no sound itself; softens the letter right before it!", wrong: ["B (as in Boat)", "V (as in Vine)", "P (as in Pine)"] }
       ],
       heavyPool: [
         { cyrillic: "ДЕНЬ", speakText: "день", prompt: "How does the soft sign (Ь) change Д + Е + Н?", sound: "DEN' (Day - softened N)", mnemonic: "Д (D) + Е (E) + НЬ (soft N) = ДЕНЬ (Day)!", wrong: ["DEN (Hard N)", "DOM (House)", "DUR (Hole)"] },
@@ -182,10 +167,6 @@ window.CurriculumData = {
         { cyrillic: "ЦАР", speakText: "цар", prompt: "Combine Ц + А + Р to read:", sound: "TSAR (Ruler)", mnemonic: "Ц (TS) + А (A) + Р (R) = ЦАР (Tsar).", wrong: ["CHAR (Spell)", "PAR (Steam)", "DAR (Gift)"] }
       ]
     },
-
-    // -------------------------------------------------------------------------
-    // STAGE 5: WORLD 1 FINAL CLIMAX BOSS (33-Letter Comprehensive Review)
-    // -------------------------------------------------------------------------
     {
       id: 5,
       roman: "V",

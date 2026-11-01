@@ -1,6 +1,6 @@
 /**
  * Cossack's Journey: Chronicles of the Carpathian Woods
- * MODULE: game.js - Persistent HP, Roguelite Reset & Mandatory 2-Pip Cleave Loop
+ * MODULE: game.js - Stable Combat & Ritual Engine
  */
 
 const DevSettings = {
@@ -27,17 +27,34 @@ const TimerManager = {
     this.activeIds.clear();
     this.activeRafs.forEach(id => cancelAnimationFrame(id));
     this.activeRafs.clear();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
   }
 };
 
 const AudioEngine = {
   ctx: null,
   enabled: true,
+  ukVoice: null,
 
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) this.ctx = new AudioCtx();
+    }
+    this.initVoices();
+  },
+
+  initVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const findVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      this.ukVoice = voices.find(v => v.lang && (v.lang.toLowerCase().startsWith('uk') || v.lang.includes('UA')));
+    };
+    findVoice();
+    if ('onvoiceschanged' in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = findVoice;
     }
   },
 
@@ -64,57 +81,57 @@ const AudioEngine = {
 
   whetstoneSpark() {
     this.playTone(880, 'triangle', 0.1, 0.25);
-    setTimeout(() => this.playTone(1200, 'sawtooth', 0.12, 0.2), 40);
+    TimerManager.set(() => this.playTone(1200, 'sawtooth', 0.12, 0.2), 40);
   },
 
   strike() {
     this.playTone(480, 'triangle', 0.12, 0.25);
-    setTimeout(() => this.playTone(240, 'sawtooth', 0.14, 0.2), 50);
+    TimerManager.set(() => this.playTone(240, 'sawtooth', 0.14, 0.2), 50);
   },
 
   critStrike() {
     this.playTone(523, 'triangle', 0.12, 0.3);
-    setTimeout(() => this.playTone(784, 'triangle', 0.14, 0.35), 55);
-    setTimeout(() => this.playTone(1046, 'sawtooth', 0.22, 0.4), 110);
+    TimerManager.set(() => this.playTone(784, 'triangle', 0.14, 0.35), 55);
+    TimerManager.set(() => this.playTone(1046, 'sawtooth', 0.22, 0.4), 110);
   },
 
   heavyStrike() {
     this.playTone(600, 'triangle', 0.18, 0.3);
-    setTimeout(() => this.playTone(300, 'sawtooth', 0.22, 0.3), 60);
-    setTimeout(() => this.playTone(150, 'sawtooth', 0.28, 0.35), 120);
+    TimerManager.set(() => this.playTone(300, 'sawtooth', 0.22, 0.3), 60);
+    TimerManager.set(() => this.playTone(150, 'sawtooth', 0.28, 0.35), 120);
   },
 
   parryBlock() {
     this.playTone(520, 'square', 0.08, 0.2);
-    setTimeout(() => this.playTone(680, 'triangle', 0.15, 0.22), 45);
+    TimerManager.set(() => this.playTone(680, 'triangle', 0.15, 0.22), 45);
   },
 
   parryRiposte() {
     this.playTone(700, 'square', 0.09, 0.25);
-    setTimeout(() => this.playTone(920, 'triangle', 0.18, 0.3), 50);
-    setTimeout(() => this.playTone(1250, 'sine', 0.25, 0.35), 110);
+    TimerManager.set(() => this.playTone(920, 'triangle', 0.18, 0.3), 50);
+    TimerManager.set(() => this.playTone(1250, 'sine', 0.25, 0.35), 110);
   },
 
   heal() {
     [330, 440, 554, 660].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 'sine', 0.18, 0.18), i * 60);
+      TimerManager.set(() => this.playTone(f, 'sine', 0.18, 0.18), i * 60);
     });
   },
 
   scrollChime() {
     [523, 659, 784].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 'triangle', 0.15, 0.16), i * 60);
+      TimerManager.set(() => this.playTone(f, 'triangle', 0.15, 0.16), i * 60);
     });
   },
 
   wrong() {
     this.playTone(165, 'sawtooth', 0.18, 0.25);
-    setTimeout(() => this.playTone(125, 'sawtooth', 0.22, 0.25), 80);
+    TimerManager.set(() => this.playTone(125, 'sawtooth', 0.22, 0.25), 80);
   },
 
   victory() {
     [392, 523, 659, 784].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 'triangle', 0.22, 0.22), i * 110);
+      TimerManager.set(() => this.playTone(f, 'triangle', 0.22, 0.22), i * 110);
     });
   },
 
@@ -137,16 +154,11 @@ const AudioEngine = {
       window.speechSynthesis.cancel();
       const cleanText = String(text).replace(/\s*\/\s*/g, ', ');
       const utter = new SpeechSynthesisUtterance(cleanText);
-
-      const voices = window.speechSynthesis.getVoices();
-      const ukVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('uk'));
-      if (ukVoice) {
-        utter.voice = ukVoice;
+      if (this.ukVoice) {
+        utter.voice = this.ukVoice;
       }
-
       utter.lang = 'uk-UA';
       utter.rate = 0.85;
-      utter.onerror = () => {};
       window.speechSynthesis.speak(utter);
     } catch (e) {}
   }
@@ -589,8 +601,9 @@ const RitualSystem = {
     this.cauldronBusy = false;
     this.updateCauldronPips();
 
-    const herbsPool = CurriculumData.tiers[0].items;
-    const item = DeckManager.draw('cauldron_pool', herbsPool);
+    const activeTier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
+    const herbsPool = activeTier.items;
+    const item = DeckManager.draw(`cauldron_${activeTier.id}`, herbsPool);
     this.cauldronCurrentItem = item;
 
     document.getElementById('cauldron-prompt-word').textContent = item.cyrillic;
@@ -682,8 +695,9 @@ const RitualSystem = {
     this.scoutFails = 0;
     this.updateScoutPips();
 
-    const herbsPool = CurriculumData.tiers[1].items;
-    const item = DeckManager.draw('scout_pool', herbsPool);
+    const activeTier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
+    const pool = activeTier.items;
+    const item = DeckManager.draw(`scout_${activeTier.id}`, pool);
     this.scoutCurrentItem = item;
 
     document.getElementById('scout-prompt-verb').textContent = item.cyrillic;
@@ -764,11 +778,9 @@ const CombatEngine = {
   phase: 'IDLE',
   activeTab: 'quick',
   lastAttackTab: 'quick',
-
-  timerStartTime: 0,
-  timerDuration: 4000,
-  parryDuration: 3500,
   isDazedDebuff: false,
+  streak: 0,
+  maxStreak: 4,
 
   lockedChallenges: {
     quick: null,
@@ -801,6 +813,7 @@ const CombatEngine = {
     this.activeTab = 'quick';
     this.lastAttackTab = 'quick';
     this.isDazedDebuff = false;
+    this.streak = 0;
 
     GameState.setFocus(0);
 
@@ -820,12 +833,13 @@ const CombatEngine = {
     document.getElementById('combat-continue-box').classList.add('hidden');
 
     if (GameState.buffForesight) {
-      this.showFeedback("👁️ Scout's Foresight active: Enemy intent revealed & parry window widened!", "text-sky-300");
+      this.showFeedback("👁️ Scout's Foresight active: Incoming strikes telegraphed early!", "text-sky-300");
     } else {
       this.hideFeedback();
     }
 
     this.updateHpBars();
+    this.renderStreakUI();
     this.lockTurnChallenges();
     this.switchTab('quick');
   },
@@ -837,6 +851,44 @@ const CombatEngine = {
     if (overlay && this.weather) {
       overlay.className = `absolute inset-0 pointer-events-none transition-opacity duration-700 ${this.weather.bgClass}`;
       overlay.style.opacity = this.weather.id === 'clear' ? '0' : '0.45';
+    }
+  },
+
+  renderStreakUI() {
+    const lbl = document.getElementById('lbl-streak-bonus');
+    const pill = document.getElementById('crit-status-pill');
+
+    if (lbl) {
+      if (this.streak >= this.maxStreak) {
+        lbl.textContent = "⚡ CRIT READY!";
+        lbl.className = "text-[9px] font-mono text-amber-300 ml-1 font-black animate-pulse";
+      } else {
+        lbl.textContent = `${this.streak}/4`;
+        lbl.className = "text-[9px] font-mono text-stone-400 ml-1 font-bold";
+      }
+    }
+
+    for (let i = 1; i <= 4; i++) {
+      const pip = document.getElementById(`streak-pip-${i}`);
+      if (!pip) continue;
+      if (i <= this.streak) {
+        pip.className = "w-2.5 h-2.5 rounded-full border border-amber-400 bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)]";
+      } else {
+        pip.className = "w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900";
+      }
+    }
+
+    if (pill && this.phase !== 'PARRY_PRIMED' && this.phase !== 'PARRY_ACTIVE') {
+      if (this.isDazedDebuff) {
+        pill.textContent = "DAZED (No Crits)";
+        pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-rose-950 border border-rose-600 text-rose-300 rounded font-bold";
+      } else if (this.streak >= this.maxStreak) {
+        pill.textContent = "⚡ CRIT PRIMED (1.5x DMG)";
+        pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-amber-950 border border-amber-400 text-amber-300 rounded font-bold animate-pulse";
+      } else {
+        pill.textContent = `Streak: ${this.streak}/4`;
+        pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded";
+      }
     }
   },
 
@@ -880,7 +932,7 @@ const CombatEngine = {
   },
 
   switchTab(tabName, force = false) {
-    if (!force && (this.phase === 'ACTIVE_TIMER' || this.phase === 'PARRY_ACTIVE' || this.phase === 'PARRY_PRIMED' || this.phase === 'RESOLVING')) return;
+    if (!force && (this.phase === 'ACTIVE_WAITING' || this.phase === 'PARRY_ACTIVE' || this.phase === 'PARRY_PRIMED' || this.phase === 'RESOLVING')) return;
 
     if (tabName === 'quick' && GameState.focusCharges >= 2) {
       this.showFeedback("⚡ Runic Cleave is primed! Blend the word to strike!", "text-amber-300");
@@ -930,9 +982,6 @@ const CombatEngine = {
     if (!challenge) return;
     this.phase = 'PRIMED';
 
-    const bar = document.getElementById('combat-timer-bar');
-    if (bar) bar.style.width = '100%';
-
     document.getElementById('combat-choices-grid').classList.add('hidden');
     document.getElementById('combat-parry-box').classList.add('hidden');
     document.getElementById('combat-continue-box').classList.add('hidden');
@@ -941,17 +990,16 @@ const CombatEngine = {
     document.getElementById('combat-lock-label').textContent = `Turn #${this.turnNumber} (${challenge.type === 'quick' ? 'Light' : 'Heavy'})`;
     document.getElementById('combat-prompt-mode').textContent = challenge.modeBanner;
     document.getElementById('combat-cyrillic-prompt').textContent = challenge.cyrillic;
-    document.getElementById('combat-prompt-subtitle').textContent = challenge.type === 'heavy' ? "⚡ Runic Cleave Ready! Inspect the Ukrainian blend and unleash:" : "Inspect the rune and sound. Click below when ready to strike:";
-    const pill = document.getElementById('crit-status-pill');
-    if (pill) {
-      pill.textContent = challenge.type === 'heavy' ? "⚡ Cleave Primed" : "Ready to Strike";
-      pill.className = challenge.type === 'heavy' ? "text-[9px] font-mono px-1.5 py-0.2 bg-amber-950 border border-amber-400 text-amber-300 rounded font-bold animate-pulse" : "text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded";
-    }
+    document.getElementById('combat-prompt-subtitle').textContent = challenge.type === 'heavy'
+      ? "⚡ Runic Cleave Ready! Inspect the Ukrainian blend and unleash:"
+      : "Inspect the rune and sound. Click below when ready to strike:";
+
+    this.renderStreakUI();
   },
 
   unleashPlayerStrike() {
     if (this.phase !== 'PRIMED' && this.phase !== 'IDLE') return;
-    this.phase = 'ACTIVE_TIMER';
+    this.phase = 'ACTIVE_WAITING';
 
     const challenge = this.lockedChallenges[this.activeTab] || this.lockedChallenges.quick;
     if (!challenge) return;
@@ -961,7 +1009,6 @@ const CombatEngine = {
 
     const grid = document.getElementById('combat-choices-grid');
     grid.classList.remove('hidden');
-    grid.className = "grid grid-cols-2 gap-2";
     grid.innerHTML = '';
 
     challenge.options.forEach((opt, idx) => {
@@ -979,62 +1026,11 @@ const CombatEngine = {
     });
 
     document.getElementById('combat-prompt-subtitle').textContent = challenge.subtitle;
-    this.startReflexTimer(this.timerDuration);
-  },
-
-  startReflexTimer(durationMs) {
-    TimerManager.activeRafs.forEach(raf => cancelAnimationFrame(raf));
-    TimerManager.activeRafs.clear();
-
-    this.timerStartTime = performance.now();
-    const bar = document.getElementById('combat-timer-bar');
-    if (bar) bar.style.width = '100%';
-
-    const updateTimer = (now) => {
-      if (this.phase !== 'ACTIVE_TIMER' && this.phase !== 'PARRY_ACTIVE') return;
-      const elapsed = now - this.timerStartTime;
-      const remainingPct = Math.max(0, 100 - (elapsed / durationMs) * 100);
-      if (bar) bar.style.width = `${remainingPct}%`;
-
-      const pill = document.getElementById('crit-status-pill');
-      if (pill) {
-        if (this.phase === 'ACTIVE_TIMER') {
-          if (this.isDazedDebuff) {
-            pill.textContent = "DAZED (No Crits)";
-            pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-rose-950 border border-rose-600 text-rose-300 rounded font-bold";
-          } else if (elapsed <= 2000) {
-            pill.textContent = "⚡ CRIT READY (<2.0s)";
-            pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-amber-950 border border-amber-500 text-amber-300 rounded font-bold animate-pulse";
-          } else {
-            pill.textContent = "Standard Hit";
-            pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded";
-          }
-        } else if (this.phase === 'PARRY_ACTIVE') {
-          const parryCritLimit = GameState.buffForesight ? 2300 : 1800;
-          if (elapsed <= parryCritLimit) {
-            pill.textContent = `⚔️ RIPOSTE READY (<${(parryCritLimit / 1000).toFixed(1)}s)`;
-            pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-sky-950 border border-sky-500 text-sky-300 rounded font-bold animate-pulse";
-          } else {
-            pill.textContent = "🛡️ Block Only";
-            pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded";
-          }
-        }
-      }
-
-      if (remainingPct > 0) {
-        const raf = requestAnimationFrame(updateTimer);
-        TimerManager.activeRafs.add(raf);
-      }
-    };
-
-    const firstRaf = requestAnimationFrame(updateTimer);
-    TimerManager.activeRafs.add(firstRaf);
   },
 
   handleOptionSelected(idx) {
-    if (this.phase !== 'ACTIVE_TIMER' && this.phase !== 'PARRY_ACTIVE') return;
+    if (this.phase !== 'ACTIVE_WAITING' && this.phase !== 'PARRY_ACTIVE') return;
 
-    const responseTimeMs = performance.now() - this.timerStartTime;
     const isParry = this.phase === 'PARRY_ACTIVE';
     const challenge = isParry ? this.lockedChallenges.parry : (this.lockedChallenges[this.activeTab] || this.lockedChallenges.quick);
     if (!challenge) return;
@@ -1065,28 +1061,31 @@ const CombatEngine = {
     }
 
     if (isParry) {
-      this.resolveParry(opt.isCorrect, challenge, responseTimeMs);
+      this.resolveParry(opt.isCorrect, challenge);
     } else {
-      this.resolveAttack(opt.isCorrect, challenge, responseTimeMs);
+      this.resolveAttack(opt.isCorrect, challenge);
     }
   },
 
-  resolveAttack(isCorrect, challenge, responseTimeMs) {
-    try {
-      if (isCorrect) {
-        const isHeavy = challenge.type === 'heavy';
-        const isCrit = responseTimeMs <= 2000 && !this.isDazedDebuff;
+  resolveAttack(isCorrect, challenge) {
+    if (isCorrect) {
+      const isCrit = this.streak >= this.maxStreak && !this.isDazedDebuff;
+      const isHeavy = challenge.type === 'heavy';
 
-        let baseDmg = isHeavy ? 30 : 10;
-        if (GameState.buffKeenEdge && GameState.buffKeenEdgeStrikesLeft > 0) {
-          baseDmg += 4;
-          GameState.buffKeenEdgeStrikesLeft--;
-          if (GameState.buffKeenEdgeStrikesLeft <= 0) {
-            GameState.buffKeenEdge = false;
-          }
-        }
+      let baseDmg = isHeavy ? 30 : 10;
+      if (GameState.buffKeenEdge && GameState.buffKeenEdgeStrikesLeft > 0) {
+        baseDmg += 4;
+        GameState.buffKeenEdgeStrikesLeft--;
+        if (GameState.buffKeenEdgeStrikesLeft <= 0) GameState.buffKeenEdge = false;
+      }
 
-        const finalDmg = isCrit ? Math.round(baseDmg * 1.5) : baseDmg;
+      const finalDmg = isCrit ? Math.round(baseDmg * 1.5) : baseDmg;
+
+      this.showFeedback("Rune recognized!", "text-emerald-400");
+
+      TimerManager.set(() => {
+        const pSprite = document.getElementById('player-sprite');
+        if (pSprite) pSprite.classList.add('translate-x-5');
 
         if (isCrit) {
           AudioEngine.critStrike();
@@ -1098,19 +1097,28 @@ const CombatEngine = {
           AudioEngine.strike();
           this.triggerScreenEffect('', 'shake-light');
         }
+      }, 380);
 
+      TimerManager.set(() => {
         const pSprite = document.getElementById('player-sprite');
         const slash = document.getElementById('enemy-slash-fx');
-        if (pSprite) pSprite.classList.add('translate-x-4');
-        if (slash) slash.classList.remove('hidden');
-        TimerManager.set(() => {
-          if (pSprite) pSprite.classList.remove('translate-x-4');
-          if (slash) slash.classList.add('hidden');
-        }, 350);
+        if (pSprite) pSprite.classList.remove('translate-x-5');
+        if (slash) {
+          slash.classList.remove('hidden');
+          TimerManager.set(() => slash.classList.add('hidden'), 280);
+        }
 
         this.enemyHp = Math.max(0, this.enemyHp - finalDmg);
         const tag = isCrit ? `КРИТ! -${finalDmg}` : `-${finalDmg}`;
-        this.spawnFloat('enemy-dmg-anchor', tag, isCrit ? 'text-yellow-300 font-black' : isHeavy ? 'text-amber-300 font-bold' : 'text-amber-100');
+        this.spawnFloat('enemy-dmg-anchor', tag, isCrit ? 'text-yellow-300 font-black text-xl' : isHeavy ? 'text-amber-300 font-bold' : 'text-amber-100');
+        this.updateHpBars();
+
+        if (isCrit) {
+          this.streak = 0;
+        } else {
+          this.streak = Math.min(this.maxStreak, this.streak + 1);
+        }
+        this.renderStreakUI();
 
         if (isHeavy) {
           GameState.setFocus(0);
@@ -1119,22 +1127,20 @@ const CombatEngine = {
           GameState.setFocus(GameState.focusCharges + 1);
         }
 
-        this.showFeedback(
-          isCrit
-            ? `⚡ CRITICAL HIT (${(responseTimeMs / 1000).toFixed(1)}s)! Dealt ${finalDmg} DMG!`
-            : isHeavy
-              ? `⚡ Runic Cleave crushed for ${finalDmg} DMG!`
-              : `🗡 Quick Strike landed for ${finalDmg} DMG! (+1 Focus)`,
-          isCrit ? 'text-yellow-300' : 'text-emerald-400'
-        );
-
         if (this.isDazedDebuff) {
           this.isDazedDebuff = false;
-          const dazedBadge = document.getElementById('debuff-dazed-badge');
-          if (dazedBadge) dazedBadge.classList.add('hidden');
+          const dBadge = document.getElementById('debuff-dazed-badge');
+          if (dBadge) dBadge.classList.add('hidden');
         }
 
-        this.updateHpBars();
+        this.showFeedback(
+          isCrit
+            ? `⚡ 4-STREAK CRITICAL! Dealt ${finalDmg} DMG!`
+            : isHeavy
+              ? `⚡ Runic Cleave crushed for ${finalDmg} DMG!`
+              : `🗡 Quick Strike landed for ${finalDmg} DMG! (${this.streak}/4 Streak)`,
+          isCrit ? 'text-yellow-300' : 'text-emerald-400'
+        );
 
         if (this.enemyHp <= 0) {
           TimerManager.set(() => this.handleVictory(), 850);
@@ -1142,17 +1148,22 @@ const CombatEngine = {
         }
 
         this.playerActionsSinceParry++;
-        this.scheduleNextTurnTransition(1100);
-      } else {
-        AudioEngine.wrong();
-        if (challenge.type === 'heavy') {
-          GameState.setFocus(0);
-          this.lastAttackTab = 'quick';
-          this.showFeedback(`⚡ Cleave shattered back to 0 Focus! Tip: ${challenge.mnemonic}`, 'text-rose-400');
-        } else {
-          this.showFeedback(`Strike missed! Remember: ${challenge.mnemonic}`, 'text-rose-400');
-        }
+        this.scheduleNextTurnTransition(1200);
+      }, 750);
 
+    } else {
+      AudioEngine.wrong();
+      this.streak = 0;
+      this.renderStreakUI();
+
+      if (challenge.type === 'heavy') {
+        GameState.setFocus(0);
+        this.lastAttackTab = 'quick';
+      }
+
+      this.showFeedback(`Strike missed (Streak broken)! Tip: ${challenge.mnemonic}`, 'text-rose-400');
+
+      TimerManager.set(() => {
         const counterDmg = Math.max(8, Math.round(this.getEffectiveEnemyDamage() * 0.7));
         this.damagePlayer(counterDmg);
 
@@ -1162,11 +1173,8 @@ const CombatEngine = {
         }
 
         this.playerActionsSinceParry++;
-        this.scheduleNextTurnTransition(1350);
-      }
-    } catch (err) {
-      console.error("Attack resolution error recovered:", err);
-      this.scheduleNextTurnTransition(600);
+        this.scheduleNextTurnTransition(1400);
+      }, 500);
     }
   },
 
@@ -1222,7 +1230,7 @@ const CombatEngine = {
       parryItem,
       'parry',
       `DEFENSIVE PARRY • BLOCK ${dmg} DMG`,
-      'Match ward rune quickly to counter-riposte:'
+      'Match ward rune to deflect the incoming strike:'
     );
 
     document.getElementById('combat-prime-box').classList.add('hidden');
@@ -1234,11 +1242,13 @@ const CombatEngine = {
     document.getElementById('combat-lock-label').textContent = `Turn #${this.turnNumber} Parry Stance`;
     document.getElementById('combat-prompt-mode').textContent = `🛡️ INCOMING STRIKE: ${dmg} DMG`;
     document.getElementById('combat-cyrillic-prompt').textContent = parryItem.cyrillic;
-    document.getElementById('combat-prompt-subtitle').textContent = "Raise your shield when ready to deflect the blow:";
+    document.getElementById('combat-prompt-subtitle').textContent = "Raise your shield when ready to choose the ward rune:";
     const pill = document.getElementById('crit-status-pill');
     if (pill) {
-      pill.textContent = "Defensive Stance";
-      pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-sky-950 border border-sky-600 text-sky-300 rounded font-bold";
+      pill.textContent = GameState.buffForesight ? "👁️ Foresight Riposte Ready" : "Defensive Stance";
+      pill.className = GameState.buffForesight
+        ? "text-[9px] font-mono px-1.5 py-0.2 bg-sky-950 border border-sky-400 text-sky-300 rounded font-bold animate-pulse"
+        : "text-[9px] font-mono px-1.5 py-0.2 bg-sky-950 border border-sky-700 text-sky-300 rounded font-bold";
     }
   },
 
@@ -1251,7 +1261,6 @@ const CombatEngine = {
     document.getElementById('combat-parry-box').classList.add('hidden');
     const grid = document.getElementById('combat-choices-grid');
     grid.classList.remove('hidden');
-    grid.className = "grid grid-cols-2 gap-2";
     grid.innerHTML = '';
 
     challenge.options.forEach((opt, idx) => {
@@ -1263,61 +1272,53 @@ const CombatEngine = {
     });
 
     document.getElementById('combat-prompt-subtitle').textContent = challenge.subtitle;
-    const dur = GameState.buffForesight ? this.parryDuration + 500 : this.parryDuration;
-    this.startReflexTimer(dur);
   },
 
-  resolveParry(isCorrect, challenge, responseTimeMs) {
-    try {
-      const banner = document.getElementById('enemy-telegraph-banner');
-      if (banner) banner.classList.add('hidden');
+  resolveParry(isCorrect, challenge) {
+    const banner = document.getElementById('enemy-telegraph-banner');
+    if (banner) banner.classList.add('hidden');
 
-      if (isCorrect) {
-        const limit = GameState.buffForesight ? 2300 : 1800;
-        const isRiposte = responseTimeMs <= limit;
+    if (isCorrect) {
+      const isRiposte = GameState.buffForesight;
 
-        if (isRiposte) {
-          AudioEngine.parryRiposte();
-          this.triggerScreenEffect('flash-parry', 'shake-light');
-          const counter = 12;
-          this.enemyHp = Math.max(0, this.enemyHp - counter);
-          this.spawnFloat('enemy-dmg-anchor', `RIPOSTE! -${counter}`, 'text-sky-300 font-bold');
-          this.spawnFloat('player-dmg-anchor', 'PARRIED!', 'text-emerald-400');
-          this.showFeedback(`⚔️ PERFECT RIPOSTE (${(responseTimeMs / 1000).toFixed(1)}s)! Blocked + dealt ${counter} Counter DMG!`, 'text-sky-300');
-          this.updateHpBars();
+      if (isRiposte) {
+        AudioEngine.parryRiposte();
+        this.triggerScreenEffect('flash-parry', 'shake-light');
+        const counter = 12;
+        this.enemyHp = Math.max(0, this.enemyHp - counter);
+        this.spawnFloat('enemy-dmg-anchor', `RIPOSTE! -${counter}`, 'text-sky-300 font-bold');
+        this.spawnFloat('player-dmg-anchor', 'PARRIED!', 'text-emerald-400');
+        this.showFeedback(`⚔️ FORESIGHT RIPOSTE! Deflected blow + dealt ${counter} Counter DMG!`, 'text-sky-300');
+        this.updateHpBars();
 
-          if (this.enemyHp <= 0) {
-            TimerManager.set(() => this.handleVictory(), 850);
-            return;
-          }
-        } else {
-          AudioEngine.parryBlock();
-          this.triggerScreenEffect('flash-parry', '');
-          this.spawnFloat('player-dmg-anchor', 'BLOCKED!', 'text-emerald-400');
-          this.showFeedback(`🛡️ Clean Block! Negated incoming damage.`, 'text-emerald-300');
-        }
-
-        this.scheduleNextTurnTransition(1150);
-      } else {
-        AudioEngine.wrong();
-        const dmg = this.getEffectiveEnemyDamage();
-        this.damagePlayer(dmg);
-
-        this.isDazedDebuff = true;
-        const dazedBadge = document.getElementById('debuff-dazed-badge');
-        if (dazedBadge) dazedBadge.classList.remove('hidden');
-        this.showFeedback(`Guard shattered (-${dmg} HP)! DAZED for 1 turn (no crits). Tip: ${challenge.mnemonic}`, 'text-rose-400');
-
-        if (this.playerHp <= 0) {
-          TimerManager.set(() => this.handleDefeat(), 1050);
+        if (this.enemyHp <= 0) {
+          TimerManager.set(() => this.handleVictory(), 850);
           return;
         }
-
-        this.scheduleNextTurnTransition(1500);
+      } else {
+        AudioEngine.parryBlock();
+        this.triggerScreenEffect('flash-parry', '');
+        this.spawnFloat('player-dmg-anchor', 'BLOCKED!', 'text-emerald-400');
+        this.showFeedback("🛡️ Clean Block! Negated incoming spirit damage.", "text-emerald-300");
       }
-    } catch (err) {
-      console.error("Parry resolution error recovered:", err);
-      this.scheduleNextTurnTransition(600);
+
+      this.scheduleNextTurnTransition(1200);
+    } else {
+      AudioEngine.wrong();
+      const dmg = this.getEffectiveEnemyDamage();
+      this.damagePlayer(dmg);
+
+      this.isDazedDebuff = true;
+      const dazedBadge = document.getElementById('debuff-dazed-badge');
+      if (dazedBadge) dazedBadge.classList.remove('hidden');
+      this.showFeedback(`Guard shattered (-${dmg} HP)! DAZED for 1 turn. Tip: ${challenge.mnemonic}`, 'text-rose-400');
+
+      if (this.playerHp <= 0) {
+        TimerManager.set(() => this.handleDefeat(), 1050);
+        return;
+      }
+
+      this.scheduleNextTurnTransition(1500);
     }
   },
 
@@ -1380,8 +1381,10 @@ const CombatEngine = {
     }
 
     const eSprite = document.getElementById('enemy-sprite');
-    eSprite.classList.add('-translate-x-4');
-    TimerManager.set(() => eSprite.classList.remove('-translate-x-4'), 300);
+    if (eSprite) {
+      eSprite.classList.add('-translate-x-4');
+      TimerManager.set(() => eSprite.classList.remove('-translate-x-4'), 300);
+    }
 
     this.triggerScreenEffect('flash-damage', 'shake-light');
     this.playerHp = Math.max(0, this.playerHp - dmg);
@@ -1595,15 +1598,19 @@ window.addEventListener('DOMContentLoaded', () => {
     GameState.syncUI();
   });
 
-  document.getElementById('btn-dev-fill-focus')?.addEventListener('click', () => {
-    GameState.setFocus(2);
+  document.getElementById('btn-dev-fill-focus')?.addEventListener('click', () => GameState.setFocus(2));
+  document.getElementById('btn-dev-focus-0')?.addEventListener('click', () => GameState.setFocus(0));
+  document.getElementById('btn-dev-focus-1')?.addEventListener('click', () => GameState.setFocus(1));
+
+  document.getElementById('btn-dev-streak-0')?.addEventListener('click', () => {
+    CombatEngine.streak = 0;
+    CombatEngine.renderStreakUI();
   });
-  document.getElementById('btn-dev-focus-0')?.addEventListener('click', () => {
-    GameState.setFocus(0);
+  document.getElementById('btn-dev-streak-4')?.addEventListener('click', () => {
+    CombatEngine.streak = 4;
+    CombatEngine.renderStreakUI();
   });
-  document.getElementById('btn-dev-focus-1')?.addEventListener('click', () => {
-    GameState.setFocus(1);
-  });
+
   document.getElementById('btn-dev-refill-hp')?.addEventListener('click', () => {
     GameState.playerHp = 100;
     CombatEngine.playerHp = 100;
@@ -1722,8 +1729,10 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-force-next-turn').addEventListener('click', () => CombatEngine.advanceTurn());
 
   document.getElementById('btn-combat-pronounce').addEventListener('click', () => {
-    const ch = CombatEngine.phase === 'PARRY_PRIMED' || CombatEngine.phase === 'PARRY_ACTIVE' ? CombatEngine.lockedChallenges.parry : CombatEngine.lockedChallenges[CombatEngine.lastAttackTab];
-    if (ch) AudioEngine.pronounce(ch.speakText, ch.audioKey);
+    const ch = (CombatEngine.phase === 'PARRY_PRIMED' || CombatEngine.phase === 'PARRY_ACTIVE')
+      ? CombatEngine.lockedChallenges.parry
+      : CombatEngine.lockedChallenges[CombatEngine.lastAttackTab];
+    if (ch) AudioEngine.pronounce(ch.speakText);
   });
 
   document.getElementById('btn-use-elixir').addEventListener('click', () => CombatEngine.useElixir());
