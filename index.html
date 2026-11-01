@@ -78,50 +78,50 @@
 <body class="bg-neutral-950 text-amber-100 flex items-center justify-center min-h-[100dvh] p-0 sm:p-3 overflow-hidden select-none">
 
   <!-- SVG Sprite Library (Pre-parsed vector graphics for enemies) -->
-  <svg class="hidden" aria-hidden="true">
-    <defs>
-      <g id="svg-enemy-chort">
-        <ellipse cx="50" cy="72" rx="24" ry="30" fill="#27272a" stroke="#71717a" stroke-width="2"/>
-        <circle cx="50" cy="40" r="18" fill="#3f3f46" stroke="#71717a" stroke-width="2"/>
-        <path d="M40 28 Q 28 8 20 18 Q 30 25 36 34" fill="#d4d4d8"/>
-        <path d="M60 28 Q 72 8 80 18 Q 70 25 64 34" fill="#d4d4d8"/>
-        <ellipse cx="43" cy="40" rx="3.5" ry="5" fill="#ef4444"/>
-        <ellipse cx="57" cy="40" rx="3.5" ry="5" fill="#ef4444"/>
-        <polygon points="44,50 46,55 49,50" fill="#fafafa"/>
-        <polygon points="51,50 54,55 56,50" fill="#fafafa"/>
-      </g>
-      <g id="svg-enemy-potercha">
-        <ellipse cx="50" cy="65" rx="22" ry="28" fill="#1e293b" opacity="0.85"/>
-        <circle cx="50" cy="35" r="15" fill="#334155"/>
-        <circle cx="44" cy="34" r="3" fill="#38bdf8"/>
-        <circle cx="56" cy="34" r="3" fill="#38bdf8"/>
-        <path d="M30 80 Q 50 110 70 80" stroke="#64748b" stroke-width="3" fill="none"/>
-      </g>
-      <g id="svg-enemy-mavka">
-        <ellipse cx="50" cy="76" rx="20" ry="32" fill="#064e3b" opacity="0.85"/>
-        <circle cx="50" cy="38" r="16" fill="#115e59"/>
-        <circle cx="44" cy="38" r="3" fill="#a7f3d0"/>
-        <circle cx="56" cy="38" r="3" fill="#a7f3d0"/>
-        <path d="M34 32 C 18 50, 20 85, 30 98" stroke="#10b981" stroke-width="3.5" stroke-linecap="round"/>
-        <path d="M66 32 C 82 50, 80 85, 70 98" stroke="#10b981" stroke-width="3.5" stroke-linecap="round"/>
-      </g>
-      <g id="svg-enemy-bolotnyk">
-        <ellipse cx="50" cy="74" rx="27" ry="32" fill="#1e293b" stroke="#475569" stroke-width="2"/>
-        <circle cx="50" cy="40" r="20" fill="#334155" stroke="#64748b" stroke-width="2"/>
-        <circle cx="42" cy="40" r="4" fill="#38bdf8"/>
-        <circle cx="58" cy="40" r="4" fill="#38bdf8"/>
-        <path d="M35 55 Q 50 65 65 55" stroke="#94a3b8" stroke-width="2"/>
-      </g>
-      <g id="svg-enemy-lisovyk">
-        <ellipse cx="50" cy="74" rx="28" ry="34" fill="#2d1f14" stroke="#78350f" stroke-width="2.5"/>
-        <circle cx="50" cy="38" r="22" fill="#451a03" stroke="#92400e" stroke-width="2.5"/>
-        <circle cx="41" cy="36" r="4" fill="#facc15"/>
-        <circle cx="59" cy="36" r="4" fill="#facc15"/>
-        <path d="M32 20 Q 15 5 10 18 Q 24 16 34 26" fill="#78350f"/>
-        <path d="M68 20 Q 85 5 90 18 Q 76 16 66 26" fill="#78350f"/>
-      </g>
-    </defs>
-  </svg>
+ <svg style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;" aria-hidden="true">
+  <defs>
+    <g id="svg-enemy-chort">
+      <ellipse cx="50" cy="72" rx="24" ry="30" fill="#27272a" stroke="#71717a" stroke-width="2"/>
+      <circle cx="50" cy="40" r="18" fill="#3f3f46" stroke="#71717a" stroke-width="2"/>
+      <path d="M40 28 Q 28 8 20 18 Q 30 25 36 34" fill="#d4d4d8"/>
+      <path d="M60 28 Q 72 8 80 18 Q 70 25 64 34" fill="#d4d4d8"/>
+      <ellipse cx="43" cy="40" rx="3.5" ry="5" fill="#ef4444"/>
+      <ellipse cx="57" cy="40" rx="3.5" ry="5" fill="#ef4444"/>
+      <polygon points="44,50 46,55 49,50" fill="#fafafa"/>
+      <polygon points="51,50 54,55 56,50" fill="#fafafa"/>
+    </g>
+    <g id="svg-enemy-potercha">
+      <ellipse cx="50" cy="65" rx="22" ry="28" fill="#1e293b" opacity="0.85"/>
+      <circle cx="50" cy="35" r="15" fill="#334155"/>
+      <circle cx="44" cy="34" r="3" fill="#38bdf8"/>
+      <circle cx="56" cy="34" r="3" fill="#38bdf8"/>
+      <path d="M30 80 Q 50 110 70 80" stroke="#64748b" stroke-width="3" fill="none"/>
+    </g>
+    <g id="svg-enemy-mavka">
+      <ellipse cx="50" cy="76" rx="20" ry="32" fill="#064e3b" opacity="0.85"/>
+      <circle cx="50" cy="38" r="16" fill="#115e59"/>
+      <circle cx="44" cy="38" r="3" fill="#a7f3d0"/>
+      <circle cx="56" cy="38" r="3" fill="#a7f3d0"/>
+      <path d="M34 32 C 18 50, 20 85, 30 98" stroke="#10b981" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M66 32 C 82 50, 80 85, 70 98" stroke="#10b981" stroke-width="3.5" stroke-linecap="round"/>
+    </g>
+    <g id="svg-enemy-bolotnyk">
+      <ellipse cx="50" cy="74" rx="27" ry="32" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+      <circle cx="50" cy="40" r="20" fill="#334155" stroke="#64748b" stroke-width="2"/>
+      <circle cx="42" cy="40" r="4" fill="#38bdf8"/>
+      <circle cx="58" cy="40" r="4" fill="#38bdf8"/>
+      <path d="M35 55 Q 50 65 65 55" stroke="#94a3b8" stroke-width="2"/>
+    </g>
+    <g id="svg-enemy-lisovyk">
+      <ellipse cx="50" cy="74" rx="28" ry="34" fill="#2d1f14" stroke="#78350f" stroke-width="2.5"/>
+      <circle cx="50" cy="38" r="22" fill="#451a03" stroke="#92400e" stroke-width="2.5"/>
+      <circle cx="41" cy="36" r="4" fill="#facc15"/>
+      <circle cx="59" cy="36" r="4" fill="#facc15"/>
+      <path d="M32 20 Q 15 5 10 18 Q 24 16 34 26" fill="#78350f"/>
+      <path d="M68 20 Q 85 5 90 18 Q 76 16 66 26" fill="#78350f"/>
+    </g>
+  </defs>
+</svg>
 
   <!-- Mobile Viewport Shell -->
   <div id="app-container" class="relative w-full max-w-md h-[100dvh] sm:h-[880px] bg-stone-900 border-0 sm:border-4 border-amber-900/60 sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col justify-between">
