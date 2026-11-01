@@ -1,6 +1,6 @@
 /**
  * Cossack's Journey: Chronicles of the Carpathian Woods
- * MODULE: game.js - Complete Logic, Audio, Camp Rituals & Combat Engine
+ * MODULE: game.js - Persistent HP, Roguelite Reset & Mandatory 2-Pip Cleave Loop
  */
 
 const DevSettings = {
@@ -118,21 +118,42 @@ const AudioEngine = {
     });
   },
 
-  pronounce(text) {
+  pronounce(text, audioFileKey = null) {
     if (!this.enabled) return;
-    this.playTone(528, 'sine', 0.08, 0.08);
+    this.playTone(528, 'sine', 0.08, 0.08); // Tactile audio chime
+
+    // Determine target filename (uses explicit audioFileKey, or sanitizes text)
+    const cleanKey = (audioFileKey || text).toString().trim().toLowerCase();
+    const audioPath = `audio/${encodeURIComponent(cleanKey)}.mp3`;
+
+    // Attempt to load and play dedicated audio asset
+    const sound = new Audio(audioPath);
+    sound.play().catch(() => {
+      // Graceful fallback to browser's SpeechSynthesis engine
+      this.fallbackSpeechSynthesis(text);
+    });
+  },
+
+  fallbackSpeechSynthesis(text) {
     if (!('speechSynthesis' in window)) return;
     try {
       window.speechSynthesis.cancel();
       const cleanText = String(text).replace(/\s*\/\s*/g, ', ');
       const utter = new SpeechSynthesisUtterance(cleanText);
+
+      // Match system Ukrainian voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const ukVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('uk'));
+      if (ukVoice) {
+        utter.voice = ukVoice;
+      }
+
       utter.lang = 'uk-UA';
       utter.rate = 0.85;
       utter.onerror = () => {};
       window.speechSynthesis.speak(utter);
     } catch (e) {}
-  }
-};
+  },
 
 const DeckManager = {
   bags: {},
@@ -156,11 +177,13 @@ const DeckManager = {
 };
 
 const GameState = {
+  playerHp: 100,
+  maxPlayerHp: 100,
   xp: 0,
   unlockedTier: 1,
   selectedTierId: 1,
   pouch: ['elixir'],
-  focusCharges: 0,
+  focusCharges: 0, // Max 2 charges
 
   buffKeenEdge: false,
   buffKeenEdgeStrikesLeft: 0,
@@ -171,9 +194,10 @@ const GameState = {
       const raw = localStorage.getItem('cossack_rpg_p3_save');
       if (raw) {
         const data = JSON.parse(raw);
+        if (typeof data.playerHp === 'number') this.playerHp = Math.max(1, Math.min(100, data.playerHp));
         if (typeof data.xp === 'number') this.xp = data.xp;
         const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
-if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvailableTiers, Math.max(1, data.unlockedTier));
+        if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvailableTiers, Math.max(1, data.unlockedTier));
         if (typeof data.selectedTierId === 'number') this.selectedTierId = Math.min(this.unlockedTier, Math.max(1, data.selectedTierId));
         if (Array.isArray(data.pouch)) this.pouch = data.pouch.slice(0, 3);
       }
@@ -184,6 +208,7 @@ if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvail
   save() {
     try {
       localStorage.setItem('cossack_rpg_p3_save', JSON.stringify({
+        playerHp: this.playerHp,
         xp: this.xp,
         unlockedTier: this.unlockedTier,
         selectedTierId: this.selectedTierId,
@@ -194,6 +219,7 @@ if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvail
   },
 
   reset() {
+    this.playerHp = 100;
     this.xp = 0;
     this.unlockedTier = 1;
     this.selectedTierId = 1;
@@ -251,15 +277,20 @@ if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvail
   },
 
   setFocus(val) {
-    this.focusCharges = Math.max(0, Math.min(3, val));
+    this.focusCharges = Math.max(0, Math.min(2, val));
     this.renderFocusPips();
+
+    // Auto-switch & Lock to Runic Cleave when 2/2 charges reached
+    if (this.focusCharges >= 2) {
+      CombatEngine.switchTab('heavy', true);
+    }
   },
 
   renderFocusPips() {
     const lbl = document.getElementById('lbl-focus-count');
-    if (lbl) lbl.textContent = `${this.focusCharges}/3 Charges`;
+    if (lbl) lbl.textContent = `${this.focusCharges}/2 Charges`;
 
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 2; i++) {
       const pip = document.getElementById(`focus-pip-${i}`);
       if (!pip) continue;
       if (i <= this.focusCharges) {
@@ -269,24 +300,36 @@ if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvail
       }
     }
 
+    const quickTab = document.getElementById('btn-tab-quick');
     const heavyTab = document.getElementById('btn-tab-heavy');
     const heavySub = document.getElementById('tab-heavy-sublabel');
+    const quickSub = document.getElementById('tab-quick-sublabel');
+
     if (heavyTab && heavySub) {
-      if (this.focusCharges >= 3) {
+      if (this.focusCharges >= 2) {
         heavyTab.disabled = false;
-        heavySub.textContent = "READY! (35 DMG)";
-        heavySub.className = "text-[9px] font-mono text-amber-300 font-bold";
-        if (CombatEngine.activeTab !== 'heavy') {
-          heavyTab.className = "tactical-tab border-2 border-amber-500 bg-amber-950/60 text-amber-200 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow cursor-pointer";
+        heavySub.textContent = "READY! (30 DMG)";
+        heavySub.className = "text-[9px] font-mono text-amber-300 font-bold animate-pulse";
+        heavyTab.className = "tactical-tab border-2 border-amber-400 bg-amber-950 text-amber-100 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow cursor-pointer";
+
+        if (quickTab && quickSub) {
+          quickTab.disabled = true;
+          quickTab.className = "tactical-tab border-2 border-stone-800 bg-stone-950/40 text-stone-600 opacity-50 cursor-not-allowed py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all";
+          quickSub.textContent = "Locked (Cleave Ready)";
         }
       } else {
         if (CombatEngine.activeTab === 'heavy') {
           CombatEngine.switchTab('quick');
         }
         heavyTab.disabled = true;
-        heavySub.textContent = `Locked (${this.focusCharges}/3 ⚡)`;
+        heavySub.textContent = `Locked (${this.focusCharges}/2 ⚡)`;
         heavySub.className = "text-[9px] font-mono text-stone-500";
         heavyTab.className = "tactical-tab border-2 border-stone-800 bg-stone-950/50 text-stone-600 opacity-60 cursor-not-allowed py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center transition-all shadow";
+
+        if (quickTab && quickSub) {
+          quickTab.disabled = false;
+          quickSub.textContent = "+1 Focus • 10 DMG";
+        }
       }
     }
   },
@@ -305,6 +348,7 @@ if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvail
     this.renderFocusPips();
     this.renderReadinessBadges();
 
+    const maxTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
     const tier = CurriculumData.tiers.find(t => t.id === this.selectedTierId) || CurriculumData.tiers[0];
     document.getElementById('lbl-fight-stage').textContent = tier.roman;
     document.getElementById('god-mode-indicator').classList.toggle('hidden', !DevSettings.godMode);
@@ -546,7 +590,7 @@ const RitualSystem = {
     this.cauldronBusy = false;
     this.updateCauldronPips();
 
-    const herbsPool = CurriculumData.tiers[2].items;
+    const herbsPool = CurriculumData.tiers[0].items;
     const item = DeckManager.draw('cauldron_pool', herbsPool);
     this.cauldronCurrentItem = item;
 
@@ -639,8 +683,8 @@ const RitualSystem = {
     this.scoutFails = 0;
     this.updateScoutPips();
 
-    const verbsPool = CurriculumData.tiers[3].items;
-    const item = DeckManager.draw('scout_pool', verbsPool);
+    const herbsPool = CurriculumData.tiers[1].items;
+    const item = DeckManager.draw('scout_pool', herbsPool);
     this.scoutCurrentItem = item;
 
     document.getElementById('scout-prompt-verb').textContent = item.cyrillic;
@@ -714,8 +758,8 @@ const CombatEngine = {
   weather: null,
   playerHp: 100,
   playerMaxHp: 100,
-  enemyHp: 45,
-  enemyMaxHp: 45,
+  enemyHp: 75,
+  enemyMaxHp: 75,
   turnNumber: 1,
   playerActionsSinceParry: 0,
   phase: 'IDLE',
@@ -737,7 +781,7 @@ const CombatEngine = {
     if (DevSettings.overrideEnemyDamage !== null) {
       return DevSettings.overrideEnemyDamage;
     }
-    return this.tier ? this.tier.enemyDamage : 15;
+    return this.tier ? this.tier.enemyDamage : 12;
   },
 
   startBattle(tierId) {
@@ -749,7 +793,8 @@ const CombatEngine = {
     this.applyWeather();
 
     this.playerMaxHp = 100;
-    this.playerHp = 100;
+    // Persistent HP from GameState
+    this.playerHp = GameState.playerHp || 100;
     this.enemyMaxHp = targetTier.enemyMaxHp;
     this.enemyHp = targetTier.enemyMaxHp;
     this.turnNumber = 1;
@@ -804,15 +849,15 @@ const CombatEngine = {
     this.lockedChallenges.quick = this.buildChallenge(
       quickItem,
       'quick',
-      'Quick Strike • 14 DMG (+1 ⚡ Focus)',
+      'Quick Strike • 10 DMG (+1 ⚡ Focus)',
       'Select the sound of this Ukrainian rune:'
     );
 
     this.lockedChallenges.heavy = this.buildChallenge(
       heavyItem,
       'heavy',
-      'Runic Cleave • 35 DMG (Consumes 3 ⚡)',
-      heavyItem.prompt || 'Translate this Ukrainian phrase to unleash Cleave:'
+      'Runic Cleave • 30 DMG (Consumes 2 ⚡)',
+      heavyItem.prompt || 'Translate this Ukrainian blend to unleash Cleave:'
     );
 
     this.lockedChallenges.parry = null;
@@ -836,11 +881,15 @@ const CombatEngine = {
     };
   },
 
-  switchTab(tabName) {
-    if (this.phase === 'ACTIVE_TIMER' || this.phase === 'PARRY_ACTIVE' || this.phase === 'PARRY_PRIMED' || this.phase === 'RESOLVING') return;
+  switchTab(tabName, force = false) {
+    if (!force && (this.phase === 'ACTIVE_TIMER' || this.phase === 'PARRY_ACTIVE' || this.phase === 'PARRY_PRIMED' || this.phase === 'RESOLVING')) return;
 
-    if (tabName === 'heavy' && GameState.focusCharges < 3) {
-      this.showFeedback("⚡ Runic Cleave requires 3/3 Focus! Land Quick Strikes first.", "text-amber-400");
+    // Mandatory Cleave Lock: Cannot choose Quick Strike if Focus is 2/2
+    if (tabName === 'quick' && GameState.focusCharges >= 2) {
+      this.showFeedback("⚡ Runic Cleave is primed! Blend the word to strike!", "text-amber-300");
+      tabName = 'heavy';
+    } else if (tabName === 'heavy' && GameState.focusCharges < 2) {
+      this.showFeedback("⚡ Runic Cleave requires 2/2 Focus! Land Quick Strikes first.", "text-amber-400");
       tabName = 'quick';
     }
 
@@ -855,7 +904,7 @@ const CombatEngine = {
     const inactiveClass = "tactical-tab border-2 border-stone-800 bg-stone-950/75 text-stone-400 hover:text-stone-200 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center shadow";
 
     if (tabQuick) tabQuick.className = tabName === 'quick' ? activeClass : inactiveClass;
-    if (tabHeavy && GameState.focusCharges >= 3) {
+    if (tabHeavy && GameState.focusCharges >= 2) {
       tabHeavy.className = tabName === 'heavy' ? activeClass : inactiveClass;
     }
     if (tabPouch) tabPouch.className = tabName === 'pouch' ? activeClass : inactiveClass;
@@ -895,11 +944,11 @@ const CombatEngine = {
     document.getElementById('combat-lock-label').textContent = `Turn #${this.turnNumber} (${challenge.type === 'quick' ? 'Light' : 'Heavy'})`;
     document.getElementById('combat-prompt-mode').textContent = challenge.modeBanner;
     document.getElementById('combat-cyrillic-prompt').textContent = challenge.cyrillic;
-    document.getElementById('combat-prompt-subtitle').textContent = "Inspect the rune and sound. Click below when ready to strike:";
+    document.getElementById('combat-prompt-subtitle').textContent = challenge.type === 'heavy' ? "⚡ Runic Cleave Ready! Inspect the Ukrainian blend and unleash:" : "Inspect the rune and sound. Click below when ready to strike:";
     const pill = document.getElementById('crit-status-pill');
     if (pill) {
-      pill.textContent = "Ready to Strike";
-      pill.className = "text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded";
+      pill.textContent = challenge.type === 'heavy' ? "⚡ Cleave Primed" : "Ready to Strike";
+      pill.className = challenge.type === 'heavy' ? "text-[9px] font-mono px-1.5 py-0.2 bg-amber-950 border border-amber-400 text-amber-300 rounded font-bold animate-pulse" : "text-[9px] font-mono px-1.5 py-0.2 bg-stone-900 border border-stone-700 text-stone-400 rounded";
     }
   },
 
@@ -1031,7 +1080,7 @@ const CombatEngine = {
         const isHeavy = challenge.type === 'heavy';
         const isCrit = responseTimeMs <= 2000 && !this.isDazedDebuff;
 
-        let baseDmg = isHeavy ? 35 : 14;
+        let baseDmg = isHeavy ? 30 : 10;
         if (GameState.buffKeenEdge && GameState.buffKeenEdgeStrikesLeft > 0) {
           baseDmg += 4;
           GameState.buffKeenEdgeStrikesLeft--;
@@ -1158,7 +1207,7 @@ const CombatEngine = {
       if (tCounter) tCounter.textContent = this.turnNumber;
       this.hideFeedback();
       this.lockTurnChallenges();
-      const nextTab = (this.lastAttackTab === 'heavy' && GameState.focusCharges >= 3) ? 'heavy' : 'quick';
+      const nextTab = (GameState.focusCharges >= 2) ? 'heavy' : 'quick';
       this.switchTab(nextTab);
     }
   },
@@ -1289,6 +1338,9 @@ const CombatEngine = {
     this.triggerScreenEffect('flash-heal', '');
     const healAmt = Math.min(35, this.playerMaxHp - this.playerHp);
     this.playerHp += healAmt;
+    GameState.playerHp = this.playerHp;
+    GameState.save();
+
     this.updateHpBars();
     this.spawnFloat('player-dmg-anchor', `+${healAmt} HP`, 'text-emerald-400');
     this.showFeedback(`🧪 Drank Carpathian Elixir! Restored +${healAmt} HP!`, 'text-emerald-400');
@@ -1336,6 +1388,9 @@ const CombatEngine = {
 
     this.triggerScreenEffect('flash-damage', 'shake-light');
     this.playerHp = Math.max(0, this.playerHp - dmg);
+    GameState.playerHp = this.playerHp;
+    GameState.save();
+
     this.spawnFloat('player-dmg-anchor', `-${dmg}`, 'text-rose-500');
     this.updateHpBars();
   },
@@ -1388,9 +1443,12 @@ const CombatEngine = {
     this.phase = 'BATTLE_ENDED';
     AudioEngine.victory();
 
+    // Persist remaining HP across camp
+    GameState.playerHp = this.playerHp;
+
+    const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
     const xpReward = 50 + this.tier.id * 15;
-const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
-const unlockedNext = this.tier.id === GameState.unlockedTier && GameState.unlockedTier < maxAvailableTiers;
+    const unlockedNext = this.tier.id === GameState.unlockedTier && GameState.unlockedTier < maxAvailableTiers;
     if (unlockedNext) {
       GameState.unlockedTier++;
       GameState.selectedTierId = GameState.unlockedTier;
@@ -1408,6 +1466,14 @@ const unlockedNext = this.tier.id === GameState.unlockedTier && GameState.unlock
   handleDefeat() {
     this.phase = 'BATTLE_ENDED';
     AudioEngine.wrong();
+
+    // Roguelite Expedition Reset: Return to Stage 1, restore 100 HP, keep XP and Level
+    GameState.unlockedTier = 1;
+    GameState.selectedTierId = 1;
+    GameState.playerHp = 100;
+    this.playerHp = 100;
+    GameState.save();
+
     const modal = document.getElementById('modal-defeat');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -1534,8 +1600,21 @@ window.addEventListener('DOMContentLoaded', () => {
     GameState.syncUI();
   });
 
-  document.getElementById('btn-dev-fill-focus').addEventListener('click', () => {
-    GameState.setFocus(3);
+  // Dev Drawer Momentum Triggers (0, 1, 2)
+  document.getElementById('btn-dev-fill-focus')?.addEventListener('click', () => {
+    GameState.setFocus(2);
+  });
+  document.getElementById('btn-dev-focus-0')?.addEventListener('click', () => {
+    GameState.setFocus(0);
+  });
+  document.getElementById('btn-dev-focus-1')?.addEventListener('click', () => {
+    GameState.setFocus(1);
+  });
+  document.getElementById('btn-dev-refill-hp')?.addEventListener('click', () => {
+    GameState.playerHp = 100;
+    CombatEngine.playerHp = 100;
+    CombatEngine.updateHpBars();
+    GameState.save();
   });
 
   document.getElementById('btn-dev-slay-enemy').addEventListener('click', () => {
@@ -1549,12 +1628,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-document.getElementById('btn-dev-unlock-all').addEventListener('click', () => {
-  const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
-  GameState.unlockedTier = maxAvailableTiers;
-  GameState.save();
-  GameState.syncUI();
-});
+  document.getElementById('btn-dev-unlock-all').addEventListener('click', () => {
+    const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
+    GameState.unlockedTier = maxAvailableTiers;
+    GameState.save();
+    GameState.syncUI();
+  });
 
   document.getElementById('btn-dev-refill-pouch').addEventListener('click', () => {
     GameState.pouch = ['elixir', 'elixir', 'scroll'];
@@ -1650,7 +1729,7 @@ document.getElementById('btn-dev-unlock-all').addEventListener('click', () => {
 
   document.getElementById('btn-combat-pronounce').addEventListener('click', () => {
     const ch = CombatEngine.phase === 'PARRY_PRIMED' || CombatEngine.phase === 'PARRY_ACTIVE' ? CombatEngine.lockedChallenges.parry : CombatEngine.lockedChallenges[CombatEngine.lastAttackTab];
-    if (ch) AudioEngine.pronounce(ch.speakText);
+    if (ch) AudioEngine.pronounce(ch.speakText, ch.audioKey);
   });
 
   document.getElementById('btn-use-elixir').addEventListener('click', () => CombatEngine.useElixir());
