@@ -120,16 +120,13 @@ const AudioEngine = {
 
   pronounce(text, audioFileKey = null) {
     if (!this.enabled) return;
-    this.playTone(528, 'sine', 0.08, 0.08); // Tactile audio chime
+    this.playTone(528, 'sine', 0.08, 0.08);
 
-    // Determine target filename (uses explicit audioFileKey, or sanitizes text)
     const cleanKey = (audioFileKey || text).toString().trim().toLowerCase();
     const audioPath = `audio/${encodeURIComponent(cleanKey)}.mp3`;
 
-    // Attempt to load and play dedicated audio asset
     const sound = new Audio(audioPath);
     sound.play().catch(() => {
-      // Graceful fallback to browser's SpeechSynthesis engine
       this.fallbackSpeechSynthesis(text);
     });
   },
@@ -141,7 +138,6 @@ const AudioEngine = {
       const cleanText = String(text).replace(/\s*\/\s*/g, ', ');
       const utter = new SpeechSynthesisUtterance(cleanText);
 
-      // Match system Ukrainian voice if available
       const voices = window.speechSynthesis.getVoices();
       const ukVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('uk'));
       if (ukVoice) {
@@ -153,7 +149,8 @@ const AudioEngine = {
       utter.onerror = () => {};
       window.speechSynthesis.speak(utter);
     } catch (e) {}
-  },
+  }
+};
 
 const DeckManager = {
   bags: {},
@@ -183,7 +180,7 @@ const GameState = {
   unlockedTier: 1,
   selectedTierId: 1,
   pouch: ['elixir'],
-  focusCharges: 0, // Max 2 charges
+  focusCharges: 0,
 
   buffKeenEdge: false,
   buffKeenEdgeStrikesLeft: 0,
@@ -280,7 +277,6 @@ const GameState = {
     this.focusCharges = Math.max(0, Math.min(2, val));
     this.renderFocusPips();
 
-    // Auto-switch & Lock to Runic Cleave when 2/2 charges reached
     if (this.focusCharges >= 2) {
       CombatEngine.switchTab('heavy', true);
     }
@@ -318,7 +314,7 @@ const GameState = {
           quickSub.textContent = "Locked (Cleave Ready)";
         }
       } else {
-        if (CombatEngine.activeTab === 'heavy') {
+        if (CombatEngine.tier && CombatEngine.activeTab === 'heavy') {
           CombatEngine.switchTab('quick');
         }
         heavyTab.disabled = true;
@@ -348,8 +344,9 @@ const GameState = {
     this.renderFocusPips();
     this.renderReadinessBadges();
 
-    const maxTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
-    const tier = CurriculumData.tiers.find(t => t.id === this.selectedTierId) || CurriculumData.tiers[0];
+    const tier = (window.CurriculumData && CurriculumData.tiers)
+      ? (CurriculumData.tiers.find(t => t.id === this.selectedTierId) || CurriculumData.tiers[0])
+      : { roman: 'I' };
     document.getElementById('lbl-fight-stage').textContent = tier.roman;
     document.getElementById('god-mode-indicator').classList.toggle('hidden', !DevSettings.godMode);
   },
@@ -426,6 +423,8 @@ const GameState = {
     const container = document.getElementById('camp-stages-container');
     if (!container) return;
     container.innerHTML = '';
+
+    if (!window.CurriculumData || !CurriculumData.tiers) return;
 
     CurriculumData.tiers.forEach(tier => {
       const isUnlocked = tier.id <= this.unlockedTier;
@@ -793,7 +792,6 @@ const CombatEngine = {
     this.applyWeather();
 
     this.playerMaxHp = 100;
-    // Persistent HP from GameState
     this.playerHp = GameState.playerHp || 100;
     this.enemyMaxHp = targetTier.enemyMaxHp;
     this.enemyHp = targetTier.enemyMaxHp;
@@ -884,7 +882,6 @@ const CombatEngine = {
   switchTab(tabName, force = false) {
     if (!force && (this.phase === 'ACTIVE_TIMER' || this.phase === 'PARRY_ACTIVE' || this.phase === 'PARRY_PRIMED' || this.phase === 'RESOLVING')) return;
 
-    // Mandatory Cleave Lock: Cannot choose Quick Strike if Focus is 2/2
     if (tabName === 'quick' && GameState.focusCharges >= 2) {
       this.showFeedback("⚡ Runic Cleave is primed! Blend the word to strike!", "text-amber-300");
       tabName = 'heavy';
@@ -1443,7 +1440,6 @@ const CombatEngine = {
     this.phase = 'BATTLE_ENDED';
     AudioEngine.victory();
 
-    // Persist remaining HP across camp
     GameState.playerHp = this.playerHp;
 
     const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
@@ -1467,7 +1463,6 @@ const CombatEngine = {
     this.phase = 'BATTLE_ENDED';
     AudioEngine.wrong();
 
-    // Roguelite Expedition Reset: Return to Stage 1, restore 100 HP, keep XP and Level
     GameState.unlockedTier = 1;
     GameState.selectedTierId = 1;
     GameState.playerHp = 100;
@@ -1600,7 +1595,6 @@ window.addEventListener('DOMContentLoaded', () => {
     GameState.syncUI();
   });
 
-  // Dev Drawer Momentum Triggers (0, 1, 2)
   document.getElementById('btn-dev-fill-focus')?.addEventListener('click', () => {
     GameState.setFocus(2);
   });
