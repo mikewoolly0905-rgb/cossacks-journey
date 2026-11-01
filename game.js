@@ -1389,7 +1389,8 @@ const CombatEngine = {
     AudioEngine.victory();
 
     const xpReward = 50 + this.tier.id * 15;
-    const unlockedNext = this.tier.id === GameState.unlockedTier && GameState.unlockedTier < 4;
+const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
+const unlockedNext = this.tier.id === GameState.unlockedTier && GameState.unlockedTier < maxAvailableTiers;
     if (unlockedNext) {
       GameState.unlockedTier++;
       GameState.selectedTierId = GameState.unlockedTier;
