@@ -1,6 +1,6 @@
 /**
  * Cossack's Journey: Chronicles of the Carpathian Woods
- * MODULE: game.js - Refactored Architecture & Modular Engine
+ * MODULE: game.js - Stable Combat & Ritual Engine
  */
 
 const DevSettings = {
@@ -9,9 +9,6 @@ const DevSettings = {
   overrideEnemyDamage: null
 };
 
-// =============================================================================
-// 1. ROBUST TIMER & ASYNC TASK MANAGER
-// =============================================================================
 const TimerManager = {
   activeIds: new Set(),
   activeRafs: new Set(),
@@ -36,14 +33,10 @@ const TimerManager = {
   }
 };
 
-// =============================================================================
-// 2. AUDIO ENGINE (VOICE CACHING & CLEAN SYNTHESIS)
-// =============================================================================
 const AudioEngine = {
   ctx: null,
   enabled: true,
   ukVoice: null,
-  activeAudioElements: new Set(),
 
   init() {
     if (!this.ctx) {
@@ -86,55 +79,37 @@ const AudioEngine = {
     } catch (e) {}
   },
 
-  playSequence(notes) {
-    notes.forEach(([f, type, dur, vol, delay]) => {
-      TimerManager.set(() => this.playTone(f, type, dur, vol), delay);
-    });
-  },
-
   whetstoneSpark() {
-    this.playSequence([
-      [880, 'triangle', 0.1, 0.25, 0],
-      [1200, 'sawtooth', 0.12, 0.2, 40]
-    ]);
+    this.playTone(880, 'triangle', 0.1, 0.25);
+    TimerManager.set(() => this.playTone(1200, 'sawtooth', 0.12, 0.2), 40);
   },
 
   strike() {
-    this.playSequence([
-      [480, 'triangle', 0.12, 0.25, 0],
-      [240, 'sawtooth', 0.14, 0.2, 50]
-    ]);
+    this.playTone(480, 'triangle', 0.12, 0.25);
+    TimerManager.set(() => this.playTone(240, 'sawtooth', 0.14, 0.2), 50);
   },
 
   critStrike() {
-    this.playSequence([
-      [523, 'triangle', 0.12, 0.3, 0],
-      [784, 'triangle', 0.14, 0.35, 55],
-      [1046, 'sawtooth', 0.22, 0.4, 110]
-    ]);
+    this.playTone(523, 'triangle', 0.12, 0.3);
+    TimerManager.set(() => this.playTone(784, 'triangle', 0.14, 0.35), 55);
+    TimerManager.set(() => this.playTone(1046, 'sawtooth', 0.22, 0.4), 110);
   },
 
   heavyStrike() {
-    this.playSequence([
-      [600, 'triangle', 0.18, 0.3, 0],
-      [300, 'sawtooth', 0.22, 0.3, 60],
-      [150, 'sawtooth', 0.28, 0.35, 120]
-    ]);
+    this.playTone(600, 'triangle', 0.18, 0.3);
+    TimerManager.set(() => this.playTone(300, 'sawtooth', 0.22, 0.3), 60);
+    TimerManager.set(() => this.playTone(150, 'sawtooth', 0.28, 0.35), 120);
   },
 
   parryBlock() {
-    this.playSequence([
-      [520, 'square', 0.08, 0.2, 0],
-      [680, 'triangle', 0.15, 0.22, 45]
-    ]);
+    this.playTone(520, 'square', 0.08, 0.2);
+    TimerManager.set(() => this.playTone(680, 'triangle', 0.15, 0.22), 45);
   },
 
   parryRiposte() {
-    this.playSequence([
-      [700, 'square', 0.09, 0.25, 0],
-      [920, 'triangle', 0.18, 0.3, 50],
-      [1250, 'sine', 0.25, 0.35, 110]
-    ]);
+    this.playTone(700, 'square', 0.09, 0.25);
+    TimerManager.set(() => this.playTone(920, 'triangle', 0.18, 0.3), 50);
+    TimerManager.set(() => this.playTone(1250, 'sine', 0.25, 0.35), 110);
   },
 
   heal() {
@@ -150,10 +125,8 @@ const AudioEngine = {
   },
 
   wrong() {
-    this.playSequence([
-      [165, 'sawtooth', 0.18, 0.25, 0],
-      [125, 'sawtooth', 0.22, 0.25, 80]
-    ]);
+    this.playTone(165, 'sawtooth', 0.18, 0.25);
+    TimerManager.set(() => this.playTone(125, 'sawtooth', 0.22, 0.25), 80);
   },
 
   victory() {
@@ -167,17 +140,10 @@ const AudioEngine = {
     this.playTone(528, 'sine', 0.08, 0.08);
 
     const cleanKey = (audioFileKey || text).toString().trim().toLowerCase();
-    const audio = new Audio(`audio/${encodeURIComponent(cleanKey)}.mp3`);
-    this.activeAudioElements.add(audio);
+    const audioPath = `audio/${encodeURIComponent(cleanKey)}.mp3`;
 
-    audio.onended = () => this.activeAudioElements.delete(audio);
-    audio.onerror = () => {
-      this.activeAudioElements.delete(audio);
-      this.fallbackSpeechSynthesis(text);
-    };
-
-    audio.play().catch(() => {
-      this.activeAudioElements.delete(audio);
+    const sound = new Audio(audioPath);
+    sound.play().catch(() => {
       this.fallbackSpeechSynthesis(text);
     });
   },
@@ -188,7 +154,9 @@ const AudioEngine = {
       window.speechSynthesis.cancel();
       const cleanText = String(text).replace(/\s*\/\s*/g, ', ');
       const utter = new SpeechSynthesisUtterance(cleanText);
-      if (this.ukVoice) utter.voice = this.ukVoice;
+      if (this.ukVoice) {
+        utter.voice = this.ukVoice;
+      }
       utter.lang = 'uk-UA';
       utter.rate = 0.85;
       window.speechSynthesis.speak(utter);
@@ -196,9 +164,6 @@ const AudioEngine = {
   }
 };
 
-// =============================================================================
-// 3. SECURE DECK DRAW SYSTEM
-// =============================================================================
 const DeckManager = {
   bags: {},
 
@@ -220,9 +185,6 @@ const DeckManager = {
   }
 };
 
-// =============================================================================
-// 4. PERSISTENT PLAYER STATE
-// =============================================================================
 const GameState = {
   playerHp: 100,
   maxPlayerHp: 100,
@@ -339,9 +301,11 @@ const GameState = {
     for (let i = 1; i <= 2; i++) {
       const pip = document.getElementById(`focus-pip-${i}`);
       if (!pip) continue;
-      pip.className = i <= this.focusCharges
-        ? "w-5 h-5 rounded-md border border-amber-400 bg-amber-500 text-stone-950 font-bold flex items-center justify-center text-[10px] shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-        : "w-5 h-5 rounded-md border border-stone-700 bg-stone-900 flex items-center justify-center text-[10px] text-stone-600 font-bold";
+      if (i <= this.focusCharges) {
+        pip.className = "w-5 h-5 rounded-md border border-amber-400 bg-amber-500 text-stone-950 font-bold flex items-center justify-center text-[10px] shadow-[0_0_8px_rgba(245,158,11,0.8)]";
+      } else {
+        pip.className = "w-5 h-5 rounded-md border border-stone-700 bg-stone-900 flex items-center justify-center text-[10px] text-stone-600 font-bold";
+      }
     }
 
     const quickTab = document.getElementById('btn-tab-quick');
@@ -518,239 +482,290 @@ const GameState = {
   }
 };
 
-// =============================================================================
-// 5. UNIFIED RITUAL SESSION ENGINE (WHETSTONE, CAULDRON, SCOUT)
-// =============================================================================
-class RitualSession {
-  constructor(config) {
-    this.targetSteps = config.targetSteps || 3;
-    this.currentStep = 0;
-    this.fails = 0;
-    this.maxFails = config.maxFails || Infinity;
-    this.deckKey = config.deckKey;
-    this.getPool = config.getPool;
-    this.pipPrefix = config.pipPrefix;
-    this.activePipClass = config.activePipClass;
-    this.idlePipClass = config.idlePipClass || "w-7 h-2 rounded-full bg-stone-800";
-    this.onPipUpdate = config.onPipUpdate || null;
-    this.onCorrect = config.onCorrect;
-    this.onComplete = config.onComplete;
-    this.onFail = config.onFail;
-    this.elements = config.elements;
-    this.busy = false;
-    this.currentItem = null;
-  }
-
-  start() {
-    this.currentStep = 0;
-    this.fails = 0;
-    this.busy = false;
-    this.next();
-  }
-
-  updatePips() {
-    if (this.onPipUpdate) {
-      this.onPipUpdate(this.currentStep, this.targetSteps);
-    }
-    for (let i = 1; i <= this.targetSteps; i++) {
-      const pip = document.getElementById(`${this.pipPrefix}-${i}`);
-      if (!pip) continue;
-      pip.className = i <= this.currentStep ? this.activePipClass : this.idlePipClass;
-    }
-  }
-
-  next() {
-    this.busy = false;
-    this.updatePips();
-
-    const pool = this.getPool();
-    this.currentItem = DeckManager.draw(this.deckKey, pool);
-    if (!this.currentItem) return;
-
-    if (this.elements.prompt) {
-      this.elements.prompt.textContent = this.currentItem.cyrillic;
-    }
-    if (this.elements.feedback) {
-      this.elements.feedback.textContent = '';
-    }
-
-    const options = DeckManager.shuffle([this.currentItem.sound, ...this.currentItem.wrong.slice(0, 3)]);
-    if (this.elements.grid) {
-      this.elements.grid.innerHTML = '';
-      options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = "ritual-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-stone-700 bg-stone-800 hover:bg-stone-700 text-stone-100 active:scale-95 transition-all";
-        btn.textContent = opt;
-        btn.addEventListener('click', () => this.resolveChoice(opt, btn));
-        this.elements.grid.appendChild(btn);
-      });
-    }
-  }
-
-  resolveChoice(selectedText, btn) {
-    if (this.busy) return;
-    this.busy = true;
-
-    this.elements.grid.querySelectorAll('.ritual-opt-btn').forEach(b => b.disabled = true);
-    const isCorrect = selectedText === this.currentItem.sound;
-
-    if (isCorrect) {
-      AudioEngine.pronounce(this.currentItem.speakText || this.currentItem.cyrillic);
-      btn.className = "ritual-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border-2 border-emerald-400 bg-emerald-950 text-emerald-200";
-      this.currentStep++;
-      this.updatePips();
-
-      if (this.currentStep >= this.targetSteps) {
-        this.onComplete(this.currentItem, this.elements.feedback);
-      } else {
-        this.onCorrect(this.currentStep, this.targetSteps, this.elements.feedback);
-        TimerManager.set(() => this.next(), 750);
-      }
-    } else {
-      AudioEngine.wrong();
-      btn.className = "ritual-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-rose-600 bg-rose-950 text-rose-200 line-through opacity-75";
-      this.fails++;
-      this.onFail(this.currentItem, this.elements.feedback, this.fails, this.maxFails);
-    }
-  }
-}
-
-// Controller managing all 3 camp activities with dynamic tier scaling
 const RitualSystem = {
-  whetstone: null,
-  cauldron: null,
-  scout: null,
-  cauldronType: 'elixir',
+  whetstoneStep: 0,
+  whetstoneCurrentItem: null,
+  whetstoneBusy: false,
 
-  init() {
-    this.whetstone = new RitualSession({
-      deckKey: 'whetstone_deck',
-      targetSteps: 3,
-      pipPrefix: 'whetstone-pip',
-      activePipClass: "w-7 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]",
-      elements: {
-        prompt: document.getElementById('whetstone-target-rune'),
-        grid: document.getElementById('whetstone-choices-grid'),
-        feedback: document.getElementById('whetstone-feedback')
-      },
-      getPool: () => {
-        const tier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
-        return tier.items;
-      },
-      onCorrect: (step, target, fb) => {
-        AudioEngine.whetstoneSpark();
-        fb.textContent = `Steel sparks! Stroke ${step}/${target} complete.`;
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-400";
-      },
-      onComplete: (item, fb) => {
-        AudioEngine.whetstoneSpark();
+  cauldronType: 'elixir',
+  cauldronStep: 0,
+  cauldronCurrentItem: null,
+  cauldronBusy: false,
+
+  scoutStep: 0,
+  scoutCurrentItem: null,
+  scoutBusy: false,
+
+  openWhetstone() {
+    this.whetstoneStep = 0;
+    this.whetstoneBusy = false;
+    this.nextWhetstoneRune();
+  },
+
+  updateWhetstonePips() {
+    for (let i = 1; i <= 3; i++) {
+      const pip = document.getElementById(`whetstone-pip-${i}`);
+      if (!pip) continue;
+      if (i <= this.whetstoneStep) {
+        pip.className = "w-7 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.8)]";
+      } else {
+        pip.className = "w-7 h-2 rounded-full bg-stone-800";
+      }
+    }
+  },
+
+  nextWhetstoneRune() {
+    this.whetstoneBusy = false;
+    this.updateWhetstonePips();
+
+    const activeTier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
+    const item = DeckManager.draw(`whetstone_${activeTier.id}`, activeTier.items);
+    this.whetstoneCurrentItem = item;
+
+    document.getElementById('whetstone-target-rune').textContent = item.cyrillic;
+    document.getElementById('whetstone-feedback').textContent = '';
+
+    const options = DeckManager.shuffle([item.sound, ...item.wrong.slice(0, 3)]);
+    const grid = document.getElementById('whetstone-choices-grid');
+    grid.innerHTML = '';
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = "whetstone-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-stone-700 bg-stone-800 hover:bg-stone-700 text-stone-100 active:scale-95 transition-all";
+      btn.textContent = opt;
+      btn.addEventListener('click', () => this.resolveWhetstoneChoice(opt, item, btn));
+      grid.appendChild(btn);
+    });
+  },
+
+  resolveWhetstoneChoice(selectedText, item, btn) {
+    if (this.whetstoneBusy) return;
+    this.whetstoneBusy = true;
+
+    document.querySelectorAll('.whetstone-opt-btn').forEach(b => b.disabled = true);
+    const feedback = document.getElementById('whetstone-feedback');
+
+    if (selectedText === item.sound) {
+      AudioEngine.whetstoneSpark();
+      AudioEngine.pronounce(item.speakText || item.cyrillic);
+      btn.className = "whetstone-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border-2 border-amber-400 bg-amber-950 text-amber-200";
+
+      this.whetstoneStep++;
+      this.updateWhetstonePips();
+
+      if (this.whetstoneStep >= 3) {
         GameState.buffKeenEdge = true;
         GameState.buffKeenEdgeStrikesLeft = 3;
         GameState.addXp(15);
-        fb.textContent = "⚔️ Blade Honed! 'Гостре лезо' active (+4 DMG next 3 hits)!";
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-300";
-        TimerManager.set(() => ViewRouter.show('view-camp'), 1300);
-      },
-      onFail: (item, fb) => {
-        this.whetstone.currentStep = Math.max(0, this.whetstone.currentStep - 1);
-        this.whetstone.updatePips();
-        fb.textContent = `Blade slipped (-1 stroke)! Tip: ${item.mnemonic}`;
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-rose-400";
-        TimerManager.set(() => this.whetstone.next(), 1400);
+        feedback.textContent = "⚔️ Blade Honed! 'Гостре лезо' active (+4 DMG next 3 hits)!";
+        feedback.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-300";
+        TimerManager.set(() => {
+          ViewRouter.show('view-camp');
+        }, 1300);
+      } else {
+        feedback.textContent = `Steel sparks! Stroke ${this.whetstoneStep}/3 complete.`;
+        feedback.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-400";
+        TimerManager.set(() => this.nextWhetstoneRune(), 750);
       }
-    });
+    } else {
+      AudioEngine.wrong();
+      this.whetstoneStep = Math.max(0, this.whetstoneStep - 1);
+      this.updateWhetstonePips();
+      btn.className = "whetstone-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-rose-600 bg-rose-950 text-rose-200 line-through opacity-75";
+      feedback.textContent = `Blade slipped (-1 stroke)! Tip: ${item.mnemonic}`;
+      feedback.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-rose-400";
+      TimerManager.set(() => this.nextWhetstoneRune(), 1400);
+    }
+  },
 
-    this.cauldron = new RitualSession({
-      deckKey: 'cauldron_deck',
-      targetSteps: 3,
-      pipPrefix: 'cauldron-pip',
-      activePipClass: "h-1.5 rounded-full bg-emerald-400",
-      idlePipClass: "h-1.5 rounded-full bg-stone-800",
-      elements: {
-        prompt: document.getElementById('cauldron-prompt-word'),
-        grid: document.getElementById('cauldron-choice-grid'),
-        feedback: document.getElementById('cauldron-status-msg')
-      },
-      onPipUpdate: (step, target) => {
-        const badge = document.getElementById('cauldron-step-badge');
-        if (badge) badge.textContent = `Ingredient ${Math.min(target, step + 1)} of ${target}`;
-      },
-      getPool: () => {
-        const tier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
-        return tier.items;
-      },
-      onCorrect: (step, target, fb) => {
-        AudioEngine.strike();
-        fb.textContent = `Herb added (${step}/${target})! Next ingredient...`;
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-emerald-300";
-      },
-      onComplete: (item, fb) => {
+  openCauldron() {
+    this.cauldronStep = 0;
+    this.cauldronBusy = false;
+    this.nextCauldronHerb();
+  },
+
+  updateCauldronPips() {
+    document.getElementById('cauldron-step-badge').textContent = `Ingredient ${Math.min(3, this.cauldronStep + 1)} of 3`;
+    for (let i = 1; i <= 3; i++) {
+      const pip = document.getElementById(`cauldron-pip-${i}`);
+      if (!pip) continue;
+      if (i <= this.cauldronStep) {
+        pip.className = "h-1.5 rounded-full bg-emerald-400";
+      } else {
+        pip.className = "h-1.5 rounded-full bg-stone-800";
+      }
+    }
+  },
+
+  nextCauldronHerb() {
+    this.cauldronBusy = false;
+    this.updateCauldronPips();
+
+    const activeTier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
+    const herbsPool = activeTier.items;
+    const item = DeckManager.draw(`cauldron_${activeTier.id}`, herbsPool);
+    this.cauldronCurrentItem = item;
+
+    document.getElementById('cauldron-prompt-word').textContent = item.cyrillic;
+    document.getElementById('cauldron-status-msg').textContent = '';
+
+    const options = DeckManager.shuffle([item.sound, ...item.wrong.slice(0, 3)]);
+    const grid = document.getElementById('cauldron-choice-grid');
+    grid.innerHTML = '';
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = "cauldron-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-emerald-900/70 bg-stone-900 hover:bg-emerald-950/60 text-stone-100 active:scale-95 transition-all";
+      btn.textContent = opt;
+      btn.addEventListener('click', () => this.resolveCauldronChoice(opt, item, btn));
+      grid.appendChild(btn);
+    });
+  },
+
+  resolveCauldronChoice(selectedText, item, btn) {
+    if (this.cauldronBusy) return;
+    this.cauldronBusy = true;
+
+    document.querySelectorAll('.cauldron-opt-btn').forEach(b => b.disabled = true);
+    const msg = document.getElementById('cauldron-status-msg');
+
+    if (selectedText === item.sound) {
+      AudioEngine.pronounce(item.speakText || item.cyrillic);
+      btn.className = "cauldron-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border-2 border-emerald-400 bg-emerald-950 text-emerald-200";
+
+      this.cauldronStep++;
+      this.updateCauldronPips();
+
+      if (this.cauldronStep >= 3) {
         AudioEngine.heal();
         const added = GameState.addItem(this.cauldronType);
         const itemName = this.cauldronType === 'elixir' ? 'Healing Elixir (+35 HP)' : 'Scroll of Clarity';
         if (added) {
           GameState.addXp(12);
-          fb.textContent = `✨ Bottled ${itemName} into Belt Pouch! (+12 XP)`;
-          fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-emerald-400";
+          msg.textContent = `✨ Bottled ${itemName} into Belt Pouch! (+12 XP)`;
+          msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-emerald-400";
         } else {
-          fb.textContent = `🎒 Belt Pouch full (3/3)! Free a slot below to bottle.`;
-          fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-400";
+          msg.textContent = `🎒 Belt Pouch full (3/3)! Free a slot below to bottle.`;
+          msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-400";
         }
-        TimerManager.set(() => this.cauldron.start(), 1300);
-      },
-      onFail: (item, fb) => {
-        this.cauldron.currentStep = 0;
-        this.cauldron.updatePips();
-        fb.textContent = `Mixture spoiled (reset to 0/3)! ${item.mnemonic}`;
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-rose-400";
-        TimerManager.set(() => this.cauldron.next(), 1400);
+        TimerManager.set(() => {
+          this.cauldronStep = 0;
+          this.nextCauldronHerb();
+        }, 1300);
+      } else {
+        AudioEngine.strike();
+        msg.textContent = `Herb added (${this.cauldronStep}/3)! Next ingredient...`;
+        msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-emerald-300";
+        TimerManager.set(() => this.nextCauldronHerb(), 750);
       }
-    });
+    } else {
+      AudioEngine.wrong();
+      this.cauldronStep = 0;
+      this.updateCauldronPips();
+      btn.className = "cauldron-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-rose-600 bg-rose-950 text-rose-200 line-through opacity-75";
+      msg.textContent = `Mixture spoiled (reset to 0/3)! ${item.mnemonic}`;
+      msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-rose-400";
+      TimerManager.set(() => this.nextCauldronHerb(), 1400);
+    }
+  },
 
-    this.scout = new RitualSession({
-      deckKey: 'scout_deck',
-      targetSteps: 3,
-      maxFails: 2,
-      pipPrefix: 'scout-pip',
-      activePipClass: "w-7 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]",
-      elements: {
-        prompt: document.getElementById('scout-prompt-verb'),
-        grid: document.getElementById('scout-choice-grid'),
-        feedback: document.getElementById('scout-status-msg')
-      },
-      getPool: () => {
-        const tier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
-        return tier.items;
-      },
-      onCorrect: (step, target, fb) => {
-        fb.textContent = `Branches crack! Instinct ${step}/${target} sharpened.`;
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-sky-300";
-      },
-      onComplete: (item, fb) => {
+  openScout() {
+    this.scoutStep = 0;
+    this.scoutBusy = false;
+    this.scoutFails = 0;
+    this.scoutResolved = false;
+    this.nextScoutVerb();
+  },
+
+  updateScoutPips() {
+    for (let i = 1; i <= 3; i++) {
+      const pip = document.getElementById(`scout-pip-${i}`);
+      if (!pip) continue;
+      if (i <= this.scoutStep) {
+        pip.className = "w-7 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]";
+      } else {
+        pip.className = "w-7 h-2 rounded-full bg-stone-800";
+      }
+    }
+  },
+
+  nextScoutVerb() {
+    if (this.scoutResolved) return;
+    this.scoutBusy = false;
+    this.scoutFails = 0;
+    this.updateScoutPips();
+
+    const activeTier = CurriculumData.tiers.find(t => t.id === GameState.selectedTierId) || CurriculumData.tiers[0];
+    const pool = activeTier.items;
+    const item = DeckManager.draw(`scout_${activeTier.id}`, pool);
+    this.scoutCurrentItem = item;
+
+    document.getElementById('scout-prompt-verb').textContent = item.cyrillic;
+    document.getElementById('scout-status-msg').textContent = '';
+
+    const options = DeckManager.shuffle([item.sound, ...item.wrong.slice(0, 3)]);
+    const grid = document.getElementById('scout-choice-grid');
+    grid.innerHTML = '';
+
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = "scout-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-sky-900/70 bg-stone-900 hover:bg-sky-950/60 text-stone-100 active:scale-95 transition-all";
+      btn.textContent = opt;
+      btn.addEventListener('click', () => this.resolveScoutChoice(opt, item, btn));
+      grid.appendChild(btn);
+    });
+  },
+
+  resolveScoutChoice(selectedText, item, btn) {
+    if (this.scoutBusy || this.scoutResolved) return;
+    this.scoutBusy = true;
+
+    document.querySelectorAll('.scout-opt-btn').forEach(b => b.disabled = true);
+    const msg = document.getElementById('scout-status-msg');
+
+    if (selectedText === item.sound) {
+      AudioEngine.pronounce(item.speakText || item.cyrillic);
+      btn.className = "scout-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border-2 border-sky-400 bg-sky-950 text-sky-200";
+
+      this.scoutStep++;
+      this.updateScoutPips();
+
+      if (this.scoutStep >= 3) {
+        this.scoutResolved = true;
         GameState.buffForesight = true;
         GameState.addXp(15);
-        fb.textContent = "👁️ Forest Scouted! 'Передбачення' active (Enemy Intent Revealed)!";
-        fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-sky-300";
-        TimerManager.set(() => ViewRouter.show('view-camp'), 1300);
-      },
-      onFail: (item, fb, fails, maxFails) => {
-        if (fails >= maxFails) {
-          fb.textContent = "Сліди загублено! Trail went cold in the thicket. No Foresight buff granted.";
-          fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-rose-400";
-          TimerManager.set(() => ViewRouter.show('view-camp'), 1500);
-        } else {
-          fb.textContent = `Shadows shift! Drawing new trail (1 attempt left). Tip: ${item.mnemonic}`;
-          fb.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-400";
-          TimerManager.set(() => this.scout.next(), 1400);
-        }
+        msg.textContent = "👁️ Forest Scouted! 'Передбачення' active (Enemy Intent Revealed)!";
+        msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-sky-300";
+        TimerManager.set(() => {
+          ViewRouter.show('view-camp');
+        }, 1300);
+      } else {
+        msg.textContent = `Branches crack! Instinct ${this.scoutStep}/3 sharpened.`;
+        msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-sky-300";
+        TimerManager.set(() => this.nextScoutVerb(), 750);
       }
-    });
+    } else {
+      btn.className = "scout-opt-btn py-2.5 px-2 text-xs font-fantasy font-bold rounded-xl border border-rose-800 bg-rose-950/50 text-rose-300/40 cursor-not-allowed line-through";
+      AudioEngine.wrong();
+
+      this.scoutFails = (this.scoutFails || 0) + 1;
+
+      if (this.scoutFails >= 2) {
+        this.scoutResolved = true;
+        msg.textContent = "Сліди загублено! Trail went cold in the thicket. No Foresight buff granted.";
+        msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-rose-400";
+        TimerManager.set(() => {
+          ViewRouter.show('view-camp');
+        }, 1500);
+      } else {
+        msg.textContent = `Shadows shift! Drawing new trail (1 attempt left). Tip: ${item.mnemonic}`;
+        msg.className = "text-xs font-mono mt-3 min-h-[22px] font-bold text-amber-400";
+        TimerManager.set(() => this.nextScoutVerb(), 1400);
+      }
+    }
   }
 };
 
-// =============================================================================
-// 6. COMBAT ENGINE (4-BEAT BATTLE ARCHITECTURE)
-// =============================================================================
 const CombatEngine = {
   tier: null,
   weather: null,
@@ -805,12 +820,8 @@ const CombatEngine = {
     const stageBadge = document.getElementById('combat-stage-badge');
     if (stageBadge) stageBadge.textContent = `STAGE ${targetTier.roman}: ${targetTier.enemyName.split(' (')[0].toUpperCase()}`;
     const eName = document.getElementById('enemy-name');
-    const eUse = document.getElementById('enemy-svg-use');
-    if (eUse && targetTier.enemySvgId) {
-      const targetId = `#${targetTier.enemySvgId}`;
-      eUse.setAttribute('href', targetId);
-      eUse.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', targetId);
-    }
+    if (eName) eName.textContent = targetTier.enemyName.split(' (')[0];
+    const eSvg = document.getElementById('enemy-svg-box');
     if (eSvg) eSvg.innerHTML = targetTier.enemySvg;
     const tCounter = document.getElementById('combat-turn-counter');
     if (tCounter) tCounter.textContent = '1';
@@ -860,9 +871,11 @@ const CombatEngine = {
     for (let i = 1; i <= 4; i++) {
       const pip = document.getElementById(`streak-pip-${i}`);
       if (!pip) continue;
-      pip.className = i <= this.streak
-        ? "w-2.5 h-2.5 rounded-full border border-amber-400 bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)]"
-        : "w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900";
+      if (i <= this.streak) {
+        pip.className = "w-2.5 h-2.5 rounded-full border border-amber-400 bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.9)]";
+      } else {
+        pip.className = "w-2.5 h-2.5 rounded-full border border-stone-700 bg-stone-900";
+      }
     }
 
     if (pill && this.phase !== 'PARRY_PRIMED' && this.phase !== 'PARRY_ACTIVE') {
@@ -940,7 +953,9 @@ const CombatEngine = {
     const inactiveClass = "tactical-tab border-2 border-stone-800 bg-stone-950/75 text-stone-400 hover:text-stone-200 py-1.5 px-1 rounded-xl text-xs font-fantasy font-bold flex flex-col items-center shadow";
 
     if (tabQuick) tabQuick.className = tabName === 'quick' ? activeClass : inactiveClass;
-    if (tabHeavy && GameState.focusCharges >= 2) tabHeavy.className = tabName === 'heavy' ? activeClass : inactiveClass;
+    if (tabHeavy && GameState.focusCharges >= 2) {
+      tabHeavy.className = tabName === 'heavy' ? activeClass : inactiveClass;
+    }
     if (tabPouch) tabPouch.className = tabName === 'pouch' ? activeClass : inactiveClass;
 
     const counts = GameState.getCounts();
@@ -994,7 +1009,6 @@ const CombatEngine = {
 
     const grid = document.getElementById('combat-choices-grid');
     grid.classList.remove('hidden');
-    grid.className = "grid grid-cols-2 gap-2";
     grid.innerHTML = '';
 
     challenge.options.forEach((opt, idx) => {
@@ -1027,8 +1041,9 @@ const CombatEngine = {
     this.phase = 'RESOLVING';
     TimerManager.clearAll();
 
-    // Beat 1: Pronunciation & Identification
-    AudioEngine.pronounce(challenge.speakText);
+    try {
+      AudioEngine.pronounce(challenge.speakText);
+    } catch (e) {}
 
     const grid = document.getElementById('combat-choices-grid');
     if (grid) {
@@ -1066,10 +1081,8 @@ const CombatEngine = {
 
       const finalDmg = isCrit ? Math.round(baseDmg * 1.5) : baseDmg;
 
-      // BEAT 1: Visual confirmation
       this.showFeedback("Rune recognized!", "text-emerald-400");
 
-      // BEAT 2: Lunge (380ms)
       TimerManager.set(() => {
         const pSprite = document.getElementById('player-sprite');
         if (pSprite) pSprite.classList.add('translate-x-5');
@@ -1086,7 +1099,6 @@ const CombatEngine = {
         }
       }, 380);
 
-      // BEAT 3: Impact & Drain (750ms)
       TimerManager.set(() => {
         const pSprite = document.getElementById('player-sprite');
         const slash = document.getElementById('enemy-slash-fx');
@@ -1101,7 +1113,11 @@ const CombatEngine = {
         this.spawnFloat('enemy-dmg-anchor', tag, isCrit ? 'text-yellow-300 font-black text-xl' : isHeavy ? 'text-amber-300 font-bold' : 'text-amber-100');
         this.updateHpBars();
 
-        this.streak = isCrit ? 0 : Math.min(this.maxStreak, this.streak + 1);
+        if (isCrit) {
+          this.streak = 0;
+        } else {
+          this.streak = Math.min(this.maxStreak, this.streak + 1);
+        }
         this.renderStreakUI();
 
         if (isHeavy) {
@@ -1131,7 +1147,6 @@ const CombatEngine = {
           return;
         }
 
-        // BEAT 4: Transition schedule
         this.playerActionsSinceParry++;
         this.scheduleNextTurnTransition(1200);
       }, 750);
@@ -1246,7 +1261,6 @@ const CombatEngine = {
     document.getElementById('combat-parry-box').classList.add('hidden');
     const grid = document.getElementById('combat-choices-grid');
     grid.classList.remove('hidden');
-    grid.className = "grid grid-cols-2 gap-2";
     grid.innerHTML = '';
 
     challenge.options.forEach((opt, idx) => {
@@ -1390,11 +1404,7 @@ const CombatEngine = {
 
     const pBar = document.getElementById('player-hp-bar');
     pBar.style.width = `${pPct}%`;
-    pBar.className = pPct > 50
-      ? "bg-gradient-to-r from-emerald-500 to-green-400 h-full transition-all duration-300"
-      : pPct > 25
-        ? "bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-300"
-        : "bg-gradient-to-r from-red-600 to-rose-500 h-full transition-all duration-300";
+    pBar.className = pPct > 50 ? "bg-gradient-to-r from-emerald-500 to-green-400 h-full transition-all duration-300" : pPct > 25 ? "bg-gradient-to-r from-amber-500 to-yellow-400 h-full transition-all duration-300" : "bg-gradient-to-r from-red-600 to-rose-500 h-full transition-all duration-300";
 
     document.getElementById('enemy-hp-bar').style.width = `${ePct}%`;
   },
@@ -1468,9 +1478,6 @@ const CombatEngine = {
   }
 };
 
-// =============================================================================
-// 7. ROUTING & CODEX VIEW SYSTEM
-// =============================================================================
 const ViewRouter = {
   show(viewId) {
     TimerManager.clearAll();
@@ -1526,14 +1533,9 @@ const CodexSystem = {
   }
 };
 
-// =============================================================================
-// 8. EVENT LISTENERS INITIALIZATION
-// =============================================================================
 window.addEventListener('DOMContentLoaded', () => {
   GameState.load();
-  RitualSystem.init();
 
-  // Developer Mode Drawer
   document.getElementById('btn-toggle-dev').addEventListener('click', () => {
     const modal = document.getElementById('modal-dev-panel');
     modal.classList.remove('hidden');
@@ -1546,14 +1548,12 @@ window.addEventListener('DOMContentLoaded', () => {
     modal.classList.remove('flex');
   });
 
-  // Sound Controls
   document.getElementById('btn-toggle-sound').addEventListener('click', () => {
     AudioEngine.enabled = !AudioEngine.enabled;
     document.getElementById('icon-sound-on').classList.toggle('hidden', !AudioEngine.enabled);
     document.getElementById('icon-sound-off').classList.toggle('hidden', AudioEngine.enabled);
   });
 
-  // Data Reset Modal
   document.getElementById('btn-reset-data').addEventListener('click', () => {
     const modal = document.getElementById('modal-reset');
     modal.classList.remove('hidden');
@@ -1574,7 +1574,6 @@ window.addEventListener('DOMContentLoaded', () => {
     ViewRouter.show('view-camp');
   });
 
-  // Developer Sliders & Overrides
   const dmgSlider = document.getElementById('slider-enemy-dmg');
   const dmgSliderVal = document.getElementById('dev-slider-val');
 
@@ -1642,19 +1641,18 @@ window.addEventListener('DOMContentLoaded', () => {
     GameState.save();
   });
 
-  // Camp Ritual Navigation
   document.getElementById('btn-open-whetstone').addEventListener('click', () => {
-    RitualSystem.whetstone.start();
+    RitualSystem.openWhetstone();
     ViewRouter.show('view-whetstone');
   });
 
   document.getElementById('btn-open-cauldron').addEventListener('click', () => {
-    RitualSystem.cauldron.start();
+    RitualSystem.openCauldron();
     ViewRouter.show('view-cauldron');
   });
 
   document.getElementById('btn-open-scout').addEventListener('click', () => {
-    RitualSystem.scout.start();
+    RitualSystem.openScout();
     ViewRouter.show('view-scout');
   });
 
@@ -1668,32 +1666,29 @@ window.addEventListener('DOMContentLoaded', () => {
     CombatEngine.startBattle(GameState.selectedTierId);
   });
 
-  // Camp Ritual Closers
   document.getElementById('btn-close-whetstone').addEventListener('click', () => ViewRouter.show('view-camp'));
   document.getElementById('btn-close-cauldron').addEventListener('click', () => ViewRouter.show('view-camp'));
   document.getElementById('btn-close-scout').addEventListener('click', () => ViewRouter.show('view-camp'));
   document.getElementById('btn-close-codex').addEventListener('click', () => ViewRouter.show('view-camp'));
 
-  // Ritual Speak Buttons
   document.getElementById('btn-whetstone-speak').addEventListener('click', () => {
-    if (RitualSystem.whetstone.currentItem) {
-      AudioEngine.pronounce(RitualSystem.whetstone.currentItem.speakText || RitualSystem.whetstone.currentItem.cyrillic);
+    if (RitualSystem.whetstoneCurrentItem) {
+      AudioEngine.pronounce(RitualSystem.whetstoneCurrentItem.speakText || RitualSystem.whetstoneCurrentItem.cyrillic);
     }
   });
 
   document.getElementById('btn-cauldron-speak').addEventListener('click', () => {
-    if (RitualSystem.cauldron.currentItem) {
-      AudioEngine.pronounce(RitualSystem.cauldron.currentItem.speakText || RitualSystem.cauldron.currentItem.cyrillic);
+    if (RitualSystem.cauldronCurrentItem) {
+      AudioEngine.pronounce(RitualSystem.cauldronCurrentItem.speakText || RitualSystem.cauldronCurrentItem.cyrillic);
     }
   });
 
   document.getElementById('btn-scout-speak').addEventListener('click', () => {
-    if (RitualSystem.scout.currentItem) {
-      AudioEngine.pronounce(RitualSystem.scout.currentItem.speakText || RitualSystem.scout.currentItem.cyrillic);
+    if (RitualSystem.scoutCurrentItem) {
+      AudioEngine.pronounce(RitualSystem.scoutCurrentItem.speakText || RitualSystem.scoutCurrentItem.cyrillic);
     }
   });
 
-  // Cauldron Recipe Selection
   document.getElementById('btn-select-brew-elixir').addEventListener('click', () => {
     RitualSystem.cauldronType = 'elixir';
     document.getElementById('btn-select-brew-elixir').className = "p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-950/70 text-left flex items-center gap-2.5 shadow";
@@ -1706,7 +1701,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-select-brew-elixir').className = "p-2.5 rounded-xl border-2 border-stone-800 bg-stone-900/70 text-left flex items-center gap-2.5 opacity-65";
   });
 
-  // Codex Tabs
   const codexBeasts = document.getElementById('btn-codex-tab-beasts');
   const codexSacred = document.getElementById('btn-codex-tab-sacred');
 
@@ -1724,7 +1718,6 @@ window.addEventListener('DOMContentLoaded', () => {
     CodexSystem.render();
   });
 
-  // Combat Arena Controls
   document.getElementById('btn-flee-combat').addEventListener('click', () => ViewRouter.show('view-camp'));
 
   document.getElementById('btn-tab-quick').addEventListener('click', () => CombatEngine.switchTab('quick'));
