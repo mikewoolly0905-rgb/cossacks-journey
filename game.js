@@ -172,7 +172,8 @@ const GameState = {
       if (raw) {
         const data = JSON.parse(raw);
         if (typeof data.xp === 'number') this.xp = data.xp;
-        if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(4, Math.max(1, data.unlockedTier));
+        const maxAvailableTiers = (window.CurriculumData && CurriculumData.tiers) ? CurriculumData.tiers.length : 5;
+if (typeof data.unlockedTier === 'number') this.unlockedTier = Math.min(maxAvailableTiers, Math.max(1, data.unlockedTier));
         if (typeof data.selectedTierId === 'number') this.selectedTierId = Math.min(this.unlockedTier, Math.max(1, data.selectedTierId));
         if (Array.isArray(data.pouch)) this.pouch = data.pouch.slice(0, 3);
       }
